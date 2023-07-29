@@ -1,0 +1,48 @@
+name: mafiagame
+description: A new Flutter project.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.5 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  cached_network_image: ^3.2.3
+  cloud_firestore: ^4.2.0
+  firebase_core: ^2.4.0
+  firebase_dynamic_links: ^5.0.11
+  flutter_localizations:
+    sdk: flutter
+  flutter_svg: ^1.1.6
+  intl: ^0.17.0
+  json_annotation: ^4.4.0
+  provider: ^6.0.4
+  uuid: ^3.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  build_runner: ^2.2.0
+  json_serializable: ^6.3.1
+  change_app_package_name: ^1.1.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/avatars/
+    - assets/images/
+
+  fonts:
+    - family: Bebas
+      fonts:
+        - asset: assets/fonts/Bebas.ttf
+flutter_intl:
+  enabled: true

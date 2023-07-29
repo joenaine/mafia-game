@@ -1,0 +1,8 @@
+{
+    "password_error":"The password is invalid or the user does not have a password",
+    "password_doesnt_match":"Passwords don’t match",
+    "emptyFieldError": "Field can not be empty",
+    "invalidEmail":"Email is invalid",
+    "fewPasswordSymbols":"Password must contain at least 6 symbols",
+    "passwordsMustMatch":"Passwords must match"
+}
