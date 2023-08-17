@@ -226,7 +226,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             }
                             charactersList.shuffle();
                             GameModel g = GameModel(
-                                roomId: id, charactersList: charactersList);
+                                roomId: id,
+                                charactersList: charactersList,
+                                timerInSec: gameInit.timeCount,
+                                isSleepTime: false);
                             setState(() {
                               isLoading = true;
                             });

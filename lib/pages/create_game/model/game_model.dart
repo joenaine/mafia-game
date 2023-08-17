@@ -8,8 +8,11 @@ part 'game_model.g.dart';
 class GameModel {
   final String? roomId;
   final List<int>? charactersList;
+  final int? timerInSec;
+  final bool? isSleepTime;
 
-  GameModel({this.roomId, this.charactersList});
+  GameModel(
+      {this.roomId, this.charactersList, this.timerInSec, this.isSleepTime});
   factory GameModel.fromJson(Map<String, dynamic> json) =>
       _$GameModelFromJson(json);
 

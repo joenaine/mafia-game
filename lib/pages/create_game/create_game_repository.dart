@@ -13,7 +13,12 @@ class GameRepository {
       return await firestore
           .collection(CollectionName.rooms)
           .doc(g.roomId)
-          .set({'roomId': g.roomId}).then((value) async {
+          .set({
+        'roomId': g.roomId,
+        'createdAt': DateTime.now(),
+        'timerInSec': g.timerInSec,
+        'isSleepTime': g.isSleepTime
+      }).then((value) async {
         for (int i = 0; i < g.charactersList!.length; i++) {
           await firestore
               .collection(CollectionName.rooms)
@@ -79,7 +84,7 @@ class GameRepository {
           .update({
         'name': characterModel.name,
         'status': CharacterStatus.alive,
-        'avatarIndex': characterModel.avatarIndex
+        'avatarIndex': characterModel.avatarIndex,
       }).then((response) {
         return true;
       });

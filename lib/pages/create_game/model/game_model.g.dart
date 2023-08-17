@@ -11,9 +11,13 @@ GameModel _$GameModelFromJson(Map<String, dynamic> json) => GameModel(
       charactersList: (json['charactersList'] as List<dynamic>?)
           ?.map((e) => e as int)
           .toList(),
+      timerInSec: json['timerInSec'] as int?,
+      isSleepTime: json['isSleepTime'] as bool?,
     );
 
 Map<String, dynamic> _$GameModelToJson(GameModel instance) => <String, dynamic>{
       'roomId': instance.roomId,
       'charactersList': instance.charactersList,
+      'timerInSec': instance.timerInSec,
+      'isSleepTime': instance.isSleepTime,
     };

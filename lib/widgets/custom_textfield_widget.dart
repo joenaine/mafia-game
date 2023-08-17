@@ -27,6 +27,7 @@ class CustomTextfield extends StatelessWidget {
         focusNode: focusNode,
         onChanged: onChanged,
         onFieldSubmitted: onFieldSubmitted,
+        textAlign: TextAlign.center,
         decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
                 borderSide:

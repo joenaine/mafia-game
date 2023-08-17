@@ -78,7 +78,6 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                   CustomTextfield(
                     controller: _nameController,
                     hintText: 'nickname',
-                    keyboardType: TextInputType.number,
                   ),
                   Wrap(
                     alignment: WrapAlignment.center,
@@ -142,6 +141,10 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                         });
                         changeScreen(context,
                             RoomMainScreen(id: concatenate.toString()));
+                      } else {
+                        setState(() {
+                          isLoading = false;
+                        });
                       }
                     },
                     text: 'JOIN',

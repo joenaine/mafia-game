@@ -19,7 +19,7 @@ class AppLoaderWidget extends StatelessWidget {
             child: Platform.isAndroid
                 ? CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.textDark,
+                    color: AppColors.white,
                     backgroundColor: Theme.of(context).colorScheme.primary)
                 : const CupertinoActivityIndicator()));
   }
