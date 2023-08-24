@@ -3,17 +3,18 @@ import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:pie_timer/pie_timer.dart';
 
 class CountDownTimer extends StatelessWidget {
-  const CountDownTimer({
-    Key? key,
-    this.duration = 10,
-  }) : super(key: key);
+  const CountDownTimer(
+      {Key? key, this.duration = 10, this.pieAnimationController})
+      : super(key: key);
   final int? duration;
+  final PieAnimationController? pieAnimationController;
 
   @override
   Widget build(BuildContext context) {
     return PieTimer(
       duration: Duration(seconds: duration!),
       radius: 150,
+      pieAnimationController: pieAnimationController,
       fillColor: AppColors.error,
       pieColor: Theme.of(context).colorScheme.background,
       borderColor: Colors.white,
@@ -28,7 +29,7 @@ class CountDownTimer extends StatelessWidget {
       isReverse: false,
       onCompleted: () => {},
       onDismissed: () => {},
-      enableTouchControls: true,
+      // enableTouchControls: true,
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:linear_timer/linear_timer.dart';
 import 'package:mafiagame/constants/app_assets.dart';
+import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:mafiagame/constants/app_variables_const.dart';
 import 'package:mafiagame/constants/firebase_consts.dart';
 import 'package:mafiagame/pages/create_game/model/game_model.dart';
@@ -9,7 +11,6 @@ import 'package:mafiagame/pages/room/model/character_model.dart';
 import 'package:mafiagame/pages/room/room_repository.dart';
 import 'package:mafiagame/widgets/app_button.dart';
 import 'package:mafiagame/widgets/app_global_loader_widget.dart';
-import 'package:mafiagame/widgets/count_down_time_widget.dart';
 import 'package:mafiagame/widgets/nav_back.dart';
 
 class RoomMainScreen extends StatefulWidget {
@@ -20,7 +21,18 @@ class RoomMainScreen extends StatefulWidget {
   State<RoomMainScreen> createState() => _RoomMainScreenState();
 }
 
-class _RoomMainScreenState extends State<RoomMainScreen> {
+class _RoomMainScreenState extends State<RoomMainScreen>
+    with TickerProviderStateMixin {
+  late LinearTimerController timerController = LinearTimerController(this);
+  bool timerRunning = false;
+
+  @override
+  void dispose() {
+    timerController.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -44,8 +56,12 @@ class _RoomMainScreenState extends State<RoomMainScreen> {
                   children: [
                     if (gameModel.isSleepTime ?? false)
                       Center(
-                          child: CountDownTimer(
-                              duration: gameModel.timerInSec ?? 10)),
+                          child: LinearTimer(
+                              backgroundColor: AppColors.white,
+                              color: AppColors.error,
+                              controller: timerController,
+                              duration: Duration(
+                                  seconds: gameModel.timerInSec ?? 10))),
                     StreamBuilder(
                         stream: firestore
                             .collection(CollectionName.rooms)
@@ -125,17 +141,39 @@ class _RoomMainScreenState extends State<RoomMainScreen> {
                   ],
                 ),
               ),
-              bottomNavigationBar: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  height: 80,
-                  child: AppButton(
-                    text: 'Sleep',
-                    onPressed: () async {
-                      final response = await RoomRepository.updateIsSleepTime(
-                          roomId: widget.id, isSleepTime: true);
-                    },
-                    color: Theme.of(context).colorScheme.primary,
-                  )),
+              bottomNavigationBar: gameModel.isSleepTime == false
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      height: 80,
+                      child: AppButton(
+                        text: 'Sleep',
+                        onPressed: () async {
+                          final response =
+                              await RoomRepository.updateIsSleepTime(
+                                  roomId: widget.id, isSleepTime: true);
+                          if (response) {
+                            timerController.reset();
+                            timerController.start();
+                            // setState(() {});
+                          }
+                        },
+                        color: Theme.of(context).colorScheme.primary,
+                      ))
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      height: 80,
+                      child: AppButton(
+                        text: 'Stop',
+                        onPressed: () async {
+                          final response =
+                              await RoomRepository.updateIsSleepTime(
+                                  roomId: widget.id, isSleepTime: false);
+                          if (response) {
+                            timerController.stop();
+                          }
+                        },
+                        color: Theme.of(context).colorScheme.primary,
+                      )),
             );
           } else {
             return Scaffold(

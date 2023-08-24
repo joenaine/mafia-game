@@ -22,6 +22,7 @@ dependencies:
   flutter_svg: ^1.1.6
   intl: ^0.17.0
   json_annotation: ^4.4.0
+  linear_timer: ^2.0.0
   pie_timer: ^1.2.0
   provider: ^6.0.4
   uuid: ^3.0.7
