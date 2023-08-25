@@ -6,6 +6,8 @@ class AppStyles {
       fontSize: 32.0, fontWeight: FontWeight.w600, color: AppColors.dark);
   static const s24w600 = TextStyle(
       fontSize: 22, fontWeight: FontWeight.w600, color: AppColors.dark);
+  static const s24w500 = TextStyle(
+      fontSize: 22, fontWeight: FontWeight.w500, color: AppColors.dark);
   static const s18w600 = TextStyle(
       fontSize: 18.0, fontWeight: FontWeight.w600, color: AppColors.dark);
   static const s14w400 = TextStyle(

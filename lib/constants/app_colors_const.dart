@@ -8,6 +8,7 @@ class AppColors {
   static const Color disabled = Color(0xFFD2D2D2);
   static const Color borders = Color(0xFFD8D8D8);
   static const Color error = Color(0xFFFF4D35);
+  static const Color lightRed = Color(0xFFFEE2D6);
   static const Color yellow = Color(0xFFFFE923);
   static const Color yellowLight = Color(0xFFFEF9CC);
   static const Color success = Color(0xFF36C43E);
