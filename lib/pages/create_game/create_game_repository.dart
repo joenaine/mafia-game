@@ -82,7 +82,7 @@ class GameRepository {
           .collection(CollectionName.characters)
           .doc(docId)
           .update({
-        'name': characterModel.name,
+        'name': characterModel.name?.toLowerCase(),
         'status': CharacterStatus.alive,
         'avatarIndex': characterModel.avatarIndex,
       }).then((response) {

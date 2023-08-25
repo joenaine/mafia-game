@@ -139,8 +139,12 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                         setState(() {
                           isLoading = false;
                         });
-                        changeScreen(context,
-                            RoomMainScreen(id: concatenate.toString()));
+                        changeScreen(
+                            context,
+                            RoomMainScreen(
+                              id: concatenate.toString(),
+                              name: _nameController.text.trim().toLowerCase(),
+                            ));
                       } else {
                         setState(() {
                           isLoading = false;

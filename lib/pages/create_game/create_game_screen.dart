@@ -235,14 +235,22 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             });
                             final response = await GameRepository.createGame(
                                 g: g,
-                                name: _nicknameController.text.trim(),
+                                name: _nicknameController.text
+                                    .trim()
+                                    .toLowerCase(),
                                 avatarIndex: gameInit.selectedContainerIndex);
                             if (response) {
                               setState(() {
                                 isLoading = false;
                               });
                               changeScreen(
-                                  context, RoomMainScreen(id: g.roomId!));
+                                  context,
+                                  RoomMainScreen(
+                                    id: g.roomId!,
+                                    name: _nicknameController.text
+                                        .trim()
+                                        .toLowerCase(),
+                                  ));
                             }
                           }
                         },
