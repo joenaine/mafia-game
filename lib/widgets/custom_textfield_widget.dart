@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:mafiagame/services/validator.dart';
 
 class CustomTextfield extends StatelessWidget {
@@ -28,6 +29,7 @@ class CustomTextfield extends StatelessWidget {
         onChanged: onChanged,
         onFieldSubmitted: onFieldSubmitted,
         textAlign: TextAlign.center,
+        cursorColor: AppColors.error,
         decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
                 borderSide:

@@ -17,7 +17,8 @@ class GameRepository {
         'roomId': g.roomId,
         'createdAt': DateTime.now(),
         'timerInSec': g.timerInSec,
-        'isSleepTime': g.isSleepTime
+        'isSleepTime': g.isSleepTime,
+        'createdBy': name
       }).then((value) async {
         for (int i = 0; i < g.charactersList!.length; i++) {
           await firestore

@@ -6,6 +6,8 @@ import 'package:mafiagame/constants/screen_navigation_const.dart';
 import 'package:mafiagame/pages/create_game/create_game_repository.dart';
 import 'package:mafiagame/pages/join_game/join_game_provider.dart';
 import 'package:mafiagame/pages/room/room_main_screen.dart';
+import 'package:mafiagame/pages/room/room_repository.dart';
+import 'package:mafiagame/widgets/alert_dialog.dart';
 import 'package:mafiagame/widgets/app_button.dart';
 import 'package:mafiagame/widgets/app_hide_keyboard_widget.dart';
 import 'package:mafiagame/widgets/app_overlay_widget.dart';
@@ -36,7 +38,9 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
         isLoading: isLoading,
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.background,
-          appBar: AppBar(),
+          appBar: AppBar(
+            elevation: 0,
+          ),
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: SingleChildScrollView(
@@ -139,12 +143,26 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                         setState(() {
                           isLoading = false;
                         });
-                        changeScreen(
-                            context,
-                            RoomMainScreen(
-                              id: concatenate.toString(),
-                              name: _nameController.text.trim().toLowerCase(),
-                            ));
+                        bool isTimerRunning =
+                            await RoomRepository.getIfGameStarted(
+                                roomId: concatenate.toString());
+                        isTimerRunning
+                            ? AlertDialogCustom.customAlert(
+                                context,
+                                title: 'The Game is\nin Sleep Mode',
+                                content: null,
+                                generalButton: 'generalButton',
+                                onTapGeneral: () {
+                                  screenPop(context);
+                                },
+                              )
+                            : changeScreen(
+                                context,
+                                RoomMainScreen(
+                                  id: concatenate.toString(),
+                                  name:
+                                      _nameController.text.trim().toLowerCase(),
+                                ));
                       } else {
                         setState(() {
                           isLoading = false;

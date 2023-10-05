@@ -4,6 +4,8 @@ import 'app_colors_const.dart';
 class AppStyles {
   static const s32w600 = TextStyle(
       fontSize: 32.0, fontWeight: FontWeight.w600, color: AppColors.dark);
+  static const s32w400 = TextStyle(
+      fontSize: 32.0, fontWeight: FontWeight.w400, color: AppColors.dark);
   static const s24w600 = TextStyle(
       fontSize: 22, fontWeight: FontWeight.w600, color: AppColors.dark);
   static const s24w500 = TextStyle(

@@ -10,9 +10,24 @@ class GameModel {
   final List<int>? charactersList;
   final int? timerInSec;
   final bool? isSleepTime;
+  final bool? isMafiaTime;
+  final bool? isDoctorTime;
+  final bool? isDetectiveTime;
+  final bool? isSilencerTime;
+  final bool? isTimeController;
+  final String? createdBy;
 
   GameModel(
-      {this.roomId, this.charactersList, this.timerInSec, this.isSleepTime});
+      {this.isTimeController,
+      this.isMafiaTime,
+      this.isDoctorTime,
+      this.isDetectiveTime,
+      this.isSilencerTime,
+      this.roomId,
+      this.charactersList,
+      this.timerInSec,
+      this.isSleepTime,
+      this.createdBy});
   factory GameModel.fromJson(Map<String, dynamic> json) =>
       _$GameModelFromJson(json);
 

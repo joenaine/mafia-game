@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:mafiagame/services/validator.dart';
 
 class PinputTextfield extends StatelessWidget {
@@ -27,6 +28,7 @@ class PinputTextfield extends StatelessWidget {
           keyboardType: keyboardType,
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 30),
+          cursorColor: AppColors.error,
           focusNode: focusNode,
           onChanged: onChanged,
           onFieldSubmitted: onFieldSubmitted,

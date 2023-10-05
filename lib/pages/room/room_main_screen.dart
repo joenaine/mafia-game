@@ -9,11 +9,13 @@ import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:mafiagame/constants/app_styles_const.dart';
 import 'package:mafiagame/constants/app_variables_const.dart';
 import 'package:mafiagame/constants/firebase_consts.dart';
+import 'package:mafiagame/constants/screen_navigation_const.dart';
 import 'package:mafiagame/pages/create_game/model/game_model.dart';
 import 'package:mafiagame/pages/join_game/join_game_provider.dart';
 import 'package:mafiagame/pages/room/model/character_model.dart';
 import 'package:mafiagame/pages/room/room_repository.dart';
 import 'package:mafiagame/services/string_extensions.dart';
+import 'package:mafiagame/widgets/alert_dialog.dart';
 import 'package:mafiagame/widgets/app_button.dart';
 import 'package:mafiagame/widgets/app_global_loader_widget.dart';
 import 'package:mafiagame/widgets/app_overlay_widget.dart';
@@ -32,50 +34,58 @@ class RoomMainScreen extends StatefulWidget {
 
 class _RoomMainScreenState extends State<RoomMainScreen>
     with TickerProviderStateMixin {
-  late LinearTimerController timerController = LinearTimerController(this);
-  bool timerRunning = false;
+  late LinearTimerController timerController;
+  bool _isTimerRunning = false;
   @override
   void initState() {
     super.initState();
-    // startTimer(20);
+    timerController = LinearTimerController(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _isTimerRunning =
+          await RoomRepository.getIfGameStarted(roomId: widget.id);
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     timerController.dispose();
-    _timer.cancel();
+    // _timer.cancel();
 
     super.dispose();
   }
 
-  late Timer _timer;
-  int _start = 59;
+  // late Timer _timer;
+  final int _start = 59;
   bool isTimerFinished = false;
 
   void startTimer(int value) {
-    isTimerFinished = false;
-    _start = value;
-    const oneSec = Duration(seconds: 1);
-    _timer = Timer.periodic(
-      oneSec,
-      (Timer timer) {
-        if (_start == 0) {
-          setState(() {
-            timer.cancel();
-            isTimerFinished = true;
-          });
-        } else {
-          setState(() {
-            _start--;
-          });
-        }
-      },
-    );
+    // isTimerFinished = false;
+    // _start = value;
+    // const oneSec = Duration(seconds: 1);
+    // _timer = Timer.periodic(
+    //   oneSec,
+    //   (Timer timer) {
+    //     if (_start == 0) {
+    //       setState(() {
+    //         timer.cancel();
+    //         isTimerFinished = true;
+    //       });
+    //     } else {
+    //       setState(() {
+    //         _start--;
+    //       });
+    //     }
+    //   },
+    // );
   }
 
   void stopTimer() {
     timerController.stop();
-    _timer.cancel();
+    timerController.start();
+    timerController.reset();
+
+    // _timer.cancel();
     selectedMafiaCharactersList.clear();
   }
 
@@ -116,9 +126,7 @@ class _RoomMainScreenState extends State<RoomMainScreen>
     setState(() {});
   }
 
-  CharacterModel? detectiveGuessedCharacter;
-
-  void mafiaOption() async {
+  Future<void> mafiaOption() async {
     if (selectedMafiaCharactersList.isNotEmpty) {
       for (int i = 0; i < selectedMafiaCharactersList.length; i++) {
         await RoomRepository.setDeadCharacterStatus(
@@ -128,7 +136,7 @@ class _RoomMainScreenState extends State<RoomMainScreen>
     }
   }
 
-  void doctorOption() async {
+  Future<void> doctorOption() async {
     if (selectedDoctorCharactersList.isNotEmpty) {
       for (int i = 0; i < selectedDoctorCharactersList.length; i++) {
         await RoomRepository.setAliveCharacterStatus(
@@ -138,7 +146,7 @@ class _RoomMainScreenState extends State<RoomMainScreen>
     }
   }
 
-  void silencerOption() async {
+  Future<void> silencerOption() async {
     if (selectedSilencerCharactersList.isNotEmpty) {
       for (int i = 0; i < selectedSilencerCharactersList.length; i++) {
         await RoomRepository.setMutedCharacterStatus(
@@ -148,11 +156,29 @@ class _RoomMainScreenState extends State<RoomMainScreen>
     }
   }
 
+  bool detectiveGuessedCharacter = false;
+
+  bool guessMafiaFunction(CharacterModel characterModel) {
+    if (characterModel.characterId == 2) {
+      AlertDialogCustom.customAlertDismissible(
+        context,
+        title: '${characterModel.name} is Mafia',
+        content: null,
+        generalButton: 'Back',
+      );
+      return true;
+    } else {
+      AlertDialogCustom.customAlertDismissible(
+        context,
+        title: '${characterModel.name} is not a Mafia',
+        content: null,
+        generalButton: 'Back',
+      );
+      return true;
+    }
+  }
+
   bool isLoading = false;
-  bool isMafiaTime = false;
-  bool isDoctorTime = false;
-  bool isDetectiveTime = false;
-  bool isSilencerTime = false;
 
   @override
   Widget build(BuildContext context) {
@@ -161,579 +187,692 @@ class _RoomMainScreenState extends State<RoomMainScreen>
       isLoading: isLoading,
       child: WillPopScope(
         onWillPop: () {
+          // timerController.dispose();
+          // _timer.cancel();
           return Future((() => true));
         },
-        child: StreamBuilder(
-            stream: firestore
-                .collection(CollectionName.rooms)
-                .doc(widget.id)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                GameModel gameModel = GameModel.fromFirestore(snapshot.data!);
+        child: _isTimerRunning
+            ? Scaffold(
+                appBar: AppBar(),
+                body: const Text('The Game is in a Sleeping Mode'))
+            : StreamBuilder(
+                stream: firestore
+                    .collection(CollectionName.rooms)
+                    .doc(widget.id)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    GameModel gameModel =
+                        GameModel.fromFirestore(snapshot.data!);
 
-                return Scaffold(
-                  backgroundColor: Theme.of(context).colorScheme.background,
-                  appBar: AppBar(
-                    leading: NavBack(
-                      onWillPop: () {
-                        stopTimer();
-                      },
-                    ),
-                    title: Text(gameModel.roomId ?? ''),
-                    titleTextStyle:
-                        const TextStyle(fontSize: 40, fontFamily: 'Bebas'),
-                  ),
-                  body: StreamBuilder(
-                      stream: firestore
-                          .collection(CollectionName.rooms)
-                          .doc(widget.id)
-                          .collection(CollectionName.characters)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          List<CharacterModel> charactersList = [];
-                          for (QueryDocumentSnapshot<
-                                  Map<String, dynamic>> category
-                              in snapshot.data!.docs) {
-                            charactersList
-                                .add(CharacterModel.fromFirestore(category));
-                          }
-                          int count = 0;
-                          for (var i = 0; i < charactersList.length; i++) {
-                            if (charactersList[i].name != null &&
-                                charactersList[i].status == 1) {
-                              count++;
-                              if (charactersList[i].name == widget.name) {
-                                meInit.myCharacter = charactersList[i];
+                    return Scaffold(
+                      backgroundColor: Theme.of(context).colorScheme.background,
+                      appBar: AppBar(
+                        leading: NavBack(
+                          onWillPop: () {
+                            // stopTimer();
+                          },
+                        ),
+                        title: Text(gameModel.roomId ?? ''),
+                        titleTextStyle:
+                            const TextStyle(fontSize: 40, fontFamily: 'Bebas'),
+                      ),
+                      body: StreamBuilder(
+                          stream: firestore
+                              .collection(CollectionName.rooms)
+                              .doc(widget.id)
+                              .collection(CollectionName.characters)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              List<CharacterModel> charactersList = [];
+                              for (QueryDocumentSnapshot<
+                                      Map<String, dynamic>> category
+                                  in snapshot.data!.docs) {
+                                charactersList.add(
+                                    CharacterModel.fromFirestore(category));
                               }
-                            }
-                          }
+                              int count = 0;
+                              for (var i = 0; i < charactersList.length; i++) {
+                                if (charactersList[i].name != null &&
+                                    charactersList[i].status == 1) {
+                                  count++;
+                                  if (charactersList[i].name == widget.name) {
+                                    meInit.myCharacter = charactersList[i];
+                                  }
+                                }
+                              }
 
-                          return SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                if (gameModel.isSleepTime ?? false) ...[
-                                  if (isMafiaTime) ...[
-                                    Center(
-                                        child: LinearTimer(
-                                            onTimerEnd: () {
-                                              setState(() {
-                                                isMafiaTime = false;
-                                                isDoctorTime = true;
-                                              });
-                                              timerController.reset();
-                                              timerController.start();
-                                              startTimer(
-                                                  gameModel.timerInSec ?? 10);
-                                            },
-                                            backgroundColor: AppColors.white,
-                                            color: AppColors.error,
-                                            controller: timerController,
-                                            duration: Duration(
-                                                seconds: gameModel.timerInSec ??
-                                                    10))),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _start.toString(),
-                                      style: TextStyle(
-                                          fontSize: 36,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondary),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'the mafia chooses a victim',
-                                      style: AppStyles.s24w500
-                                          .copyWith(color: AppColors.white),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Wrap(
-                                      alignment: WrapAlignment.center,
-                                      children: charactersList
-                                          .map((character) => Column(
-                                                children: [
-                                                  if (character.name != null &&
-                                                      character.status ==
-                                                          1) ...[
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Column(
-                                                        children: [
-                                                          GestureDetector(
-                                                            onTap: () {
-                                                              if (meInit
-                                                                      .myCharacter
-                                                                      ?.characterId ==
-                                                                  2) {
-                                                                selectMafiaCharacter(
-                                                                    character);
-                                                              }
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(3),
-                                                              decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              40),
-                                                                  border: selectedMafiaCharactersList.any((element) =>
-                                                                          element
-                                                                              .name ==
-                                                                          character
-                                                                              .name)
-                                                                      ? Border.all(
-                                                                          strokeAlign: StrokeAlign
-                                                                              .outside,
-                                                                          width:
-                                                                              2,
-                                                                          color:
-                                                                              AppColors.error)
-                                                                      : const Border()),
-                                                              child: SvgPicture
-                                                                  .asset(
-                                                                '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
-                                                                height: 60,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Text(ShortText
-                                                              .fromText(character
-                                                                      .name ??
-                                                                  ''))
-                                                        ],
-                                                      ),
-                                                    )
-                                                  ]
-                                                ],
-                                              ))
-                                          .toList(),
-                                    )
-                                  ],
-                                  //DOCTOR TIME
-                                  if (isDoctorTime) ...[
-                                    Center(
-                                        child: LinearTimer(
-                                            onTimerEnd: () {
-                                              setState(() {
-                                                isDoctorTime = false;
-                                                isSilencerTime = true;
-                                              });
-                                              timerController.reset();
-                                              timerController.start();
-                                              startTimer(
-                                                  gameModel.timerInSec ?? 10);
-                                            },
-                                            backgroundColor: AppColors.white,
-                                            color: AppColors.error,
-                                            controller: timerController,
-                                            duration: Duration(
-                                                seconds: gameModel.timerInSec ??
-                                                    10))),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _start.toString(),
-                                      style: TextStyle(
-                                          fontSize: 36,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondary),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'the doctor chooses a player to protect',
-                                      style: AppStyles.s24w500
-                                          .copyWith(color: AppColors.white),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Wrap(
-                                      alignment: WrapAlignment.center,
-                                      children: charactersList
-                                          .map((character) => Column(
-                                                children: [
-                                                  if (character.name != null &&
-                                                      character.status ==
-                                                          1) ...[
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Column(
-                                                        children: [
-                                                          GestureDetector(
-                                                            onTap: () {
-                                                              if (meInit
-                                                                      .myCharacter
-                                                                      ?.characterId ==
-                                                                  3) {
-                                                                selectDoctorCharacter(
-                                                                    character);
-                                                              }
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(3),
-                                                              decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              40),
-                                                                  border: selectedDoctorCharactersList.any((element) =>
-                                                                          element
-                                                                              .name ==
-                                                                          character
-                                                                              .name)
-                                                                      ? Border.all(
-                                                                          strokeAlign: StrokeAlign
-                                                                              .outside,
-                                                                          width:
-                                                                              2,
-                                                                          color:
-                                                                              AppColors.error)
-                                                                      : const Border()),
-                                                              child: SvgPicture
-                                                                  .asset(
-                                                                '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
-                                                                height: 60,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Text(ShortText
-                                                              .fromText(character
-                                                                      .name ??
-                                                                  ''))
-                                                        ],
-                                                      ),
-                                                    )
-                                                  ]
-                                                ],
-                                              ))
-                                          .toList(),
-                                    )
-                                  ],
-                                  //SILENCER TIME
-                                  if (isSilencerTime) ...[
-                                    Center(
-                                        child: LinearTimer(
-                                            onTimerEnd: () {
-                                              setState(() {
-                                                isSilencerTime = false;
-                                                isDetectiveTime = true;
-                                              });
-                                              timerController.reset();
-                                              timerController.start();
-                                              startTimer(
-                                                  gameModel.timerInSec ?? 10);
-                                            },
-                                            backgroundColor: AppColors.white,
-                                            color: AppColors.error,
-                                            controller: timerController,
-                                            duration: Duration(
-                                                seconds: gameModel.timerInSec ??
-                                                    10))),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _start.toString(),
-                                      style: TextStyle(
-                                          fontSize: 36,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondary),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'the silencer chooses a player to mute',
-                                      style: AppStyles.s24w500
-                                          .copyWith(color: AppColors.white),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Wrap(
-                                      alignment: WrapAlignment.center,
-                                      children: charactersList
-                                          .map((character) => Column(
-                                                children: [
-                                                  if (character.name != null &&
-                                                      character.status ==
-                                                          1) ...[
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Column(
-                                                        children: [
-                                                          GestureDetector(
-                                                            onTap: () {
-                                                              if (meInit
-                                                                      .myCharacter
-                                                                      ?.characterId ==
-                                                                  5) {
-                                                                selectSilencerCharacter(
-                                                                    character);
-                                                              }
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(3),
-                                                              decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              40),
-                                                                  border: selectedSilencerCharactersList.any((element) =>
-                                                                          element
-                                                                              .name ==
-                                                                          character
-                                                                              .name)
-                                                                      ? Border.all(
-                                                                          strokeAlign: StrokeAlign
-                                                                              .outside,
-                                                                          width:
-                                                                              2,
-                                                                          color:
-                                                                              AppColors.error)
-                                                                      : const Border()),
-                                                              child: SvgPicture
-                                                                  .asset(
-                                                                '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
-                                                                height: 60,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Text(ShortText
-                                                              .fromText(character
-                                                                      .name ??
-                                                                  ''))
-                                                        ],
-                                                      ),
-                                                    )
-                                                  ]
-                                                ],
-                                              ))
-                                          .toList(),
-                                    )
-                                  ],
-                                  //DETECTIVE TIME
-                                  if (isDetectiveTime) ...[
-                                    Center(
-                                        child: LinearTimer(
-                                            onTimerEnd: () {
-                                              setState(() {
-                                                isDetectiveTime = false;
-                                              });
-                                            },
-                                            backgroundColor: AppColors.white,
-                                            color: AppColors.error,
-                                            controller: timerController,
-                                            duration: Duration(
-                                                seconds: gameModel.timerInSec ??
-                                                    10))),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _start.toString(),
-                                      style: TextStyle(
-                                          fontSize: 36,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondary),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'the detective guesses a mafia',
-                                      style: AppStyles.s24w500
-                                          .copyWith(color: AppColors.white),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Wrap(
-                                      alignment: WrapAlignment.center,
-                                      children: charactersList
-                                          .map((character) => Column(
-                                                children: [
-                                                  if (character.name != null &&
-                                                      character.status ==
-                                                          1) ...[
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Column(
-                                                        children: [
-                                                          GestureDetector(
-                                                            onTap: () {
-                                                              if (meInit
-                                                                      .myCharacter
-                                                                      ?.characterId ==
-                                                                  4) {
-                                                                detectiveGuessedCharacter =
-                                                                    character;
-                                                              }
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(3),
-                                                              decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              40),
-                                                                  border: selectedSilencerCharactersList.any((element) =>
-                                                                          element
-                                                                              .name ==
-                                                                          character
-                                                                              .name)
-                                                                      ? Border.all(
-                                                                          strokeAlign: StrokeAlign
-                                                                              .outside,
-                                                                          width:
-                                                                              2,
-                                                                          color:
-                                                                              AppColors.error)
-                                                                      : const Border()),
-                                                              child: SvgPicture
-                                                                  .asset(
-                                                                '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
-                                                                height: 60,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Text(ShortText
-                                                              .fromText(character
-                                                                      .name ??
-                                                                  ''))
-                                                        ],
-                                                      ),
-                                                    )
-                                                  ]
-                                                ],
-                                              ))
-                                          .toList(),
-                                    )
-                                  ],
-                                ],
-                                //CHARACTERS
-                                if (gameModel.isSleepTime != true)
-                                  ListView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    shrinkWrap: true,
-                                    itemCount: charactersList.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      CharacterModel characterModel =
-                                          charactersList[index];
-
-                                      return characterModel.name != null
-                                          ? ListTile(
-                                              leading: SvgPicture.asset(
-                                                '${AppAssets.avatar.icon}${characterModel.avatarIndex!}.svg',
-                                                height: 40,
-                                              ),
-                                              minVerticalPadding: 16,
-                                              title: Row(
-                                                children: [
-                                                  Text(
-                                                    characterModel.name ?? '',
-                                                    style: const TextStyle(
-                                                        fontSize: 30),
-                                                  ),
-                                                  const SizedBox(width: 10),
-                                                  Text(
-                                                      '(${CharacterId.characterListEng[characterModel.characterId! - 1]})'),
-                                                  if (meInit
-                                                          .myCharacter?.name ==
-                                                      characterModel.name)
-                                                    Text(
-                                                      ' (you)',
-                                                      style: TextStyle(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .secondary),
-                                                    )
-                                                ],
-                                              ),
-                                              trailing: Text(CharacterStatus
-                                                      .statusListEnd[
-                                                  characterModel.status! - 1]),
-                                            )
-                                          : const SizedBox();
-                                    },
-                                  ),
-                                const SizedBox(height: 30),
-                                Center(
-                                  child: Text(
-                                    '$count/${charactersList.length}',
-                                    style: TextStyle(
-                                        fontSize: 48,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .secondary),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        } else {
-                          return AppLoaderWidget();
-                        }
-                      }),
-                  bottomNavigationBar: gameModel.isSleepTime == false
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          height: 80,
-                          child: AppButton(
-                            text: 'Sleep',
-                            onPressed: () async {
-                              isMafiaTime = true;
-                              final response =
-                                  await RoomRepository.updateIsSleepTime(
-                                      roomId: widget.id, isSleepTime: true);
-                              if (response) {
-                                startTimer(gameModel.timerInSec ?? 10);
-                                timerController.reset();
+                              if (gameModel.isTimeController == true) {
+                                // startTimer(gameModel.timerInSec ?? 10);
                                 timerController.start();
                               }
-                            },
-                            color: Theme.of(context).colorScheme.primary,
-                          ))
-                      : Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          height: 80,
-                          child: TextTap(
-                            text: 'Stop timer',
-                            onPressed: () async {
-                              final response =
-                                  await RoomRepository.updateIsSleepTime(
-                                      roomId: widget.id, isSleepTime: false);
 
-                              if (response) {
-                                stopTimer();
-                              }
-                            },
-                          )),
-                );
-              } else {
-                return Scaffold(
-                  appBar: AppBar(),
-                  body: const SizedBox(),
-                );
-              }
-            }),
+                              return SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    if (gameModel.isSleepTime ?? false) ...[
+                                      if (gameModel.isMafiaTime == true) ...[
+                                        Center(
+                                            child: LinearTimer(
+                                                onTimerEnd: () async {
+                                                  if (gameModel.createdBy ==
+                                                      meInit
+                                                          .myCharacter?.name) {
+                                                    await RoomRepository
+                                                            .updateIsMafiaTime(
+                                                                roomId:
+                                                                    widget.id,
+                                                                isMafiaTime:
+                                                                    false)
+                                                        .then((value) async {
+                                                      await RoomRepository
+                                                          .updateIsDoctorTime(
+                                                              roomId: widget.id,
+                                                              isDoctorTime:
+                                                                  true);
+                                                    });
+                                                  }
+
+                                                  // setState(() {});
+                                                  timerController.reset();
+                                                  timerController.start();
+                                                },
+                                                backgroundColor:
+                                                    AppColors.white,
+                                                color: AppColors.error,
+                                                controller: timerController,
+                                                duration: Duration(
+                                                    seconds:
+                                                        gameModel.timerInSec ??
+                                                            10))),
+                                        const SizedBox(height: 16),
+                                        // Text(
+                                        //   _start.toString(),
+                                        //   style: TextStyle(
+                                        //       fontSize: 36,
+                                        //       color: Theme.of(context)
+                                        //           .colorScheme
+                                        //           .secondary),
+                                        // ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'the mafia chooses a victim',
+                                          style: AppStyles.s24w500
+                                              .copyWith(color: AppColors.white),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Wrap(
+                                          alignment: WrapAlignment.center,
+                                          children: charactersList
+                                              .map((character) => Column(
+                                                    children: [
+                                                      if (character.name !=
+                                                              null &&
+                                                          character.status ==
+                                                              1) ...[
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Column(
+                                                            children: [
+                                                              GestureDetector(
+                                                                onTap: () {
+                                                                  if (meInit
+                                                                          .myCharacter
+                                                                          ?.characterId ==
+                                                                      2) {
+                                                                    selectMafiaCharacter(
+                                                                        character);
+                                                                  }
+                                                                },
+                                                                child:
+                                                                    Container(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(3),
+                                                                  decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              40),
+                                                                      border: selectedMafiaCharactersList.any((element) =>
+                                                                              element.name ==
+                                                                              character
+                                                                                  .name)
+                                                                          ? Border.all(
+                                                                              strokeAlign: StrokeAlign.outside,
+                                                                              width: 2,
+                                                                              color: AppColors.error)
+                                                                          : const Border()),
+                                                                  child:
+                                                                      SvgPicture
+                                                                          .asset(
+                                                                    '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
+                                                                    height: 60,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 8),
+                                                              Text(ShortText
+                                                                  .fromText(
+                                                                      character
+                                                                              .name ??
+                                                                          ''))
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ]
+                                                    ],
+                                                  ))
+                                              .toList(),
+                                        )
+                                      ],
+                                      //DOCTOR TIME
+                                      if (gameModel.isDoctorTime == true) ...[
+                                        Center(
+                                            child: LinearTimer(
+                                                onTimerEnd: () async {
+                                                  if (gameModel.createdBy ==
+                                                      meInit
+                                                          .myCharacter?.name) {
+                                                    await RoomRepository
+                                                            .updateIsDoctorTime(
+                                                                roomId:
+                                                                    widget.id,
+                                                                isDoctorTime:
+                                                                    false)
+                                                        .then((value) async {
+                                                      await RoomRepository
+                                                          .updateIsSilencerTime(
+                                                              roomId: widget.id,
+                                                              isSilencerTime:
+                                                                  true);
+                                                    });
+                                                  }
+
+                                                  timerController.reset();
+                                                  timerController.start();
+                                                },
+                                                backgroundColor:
+                                                    AppColors.white,
+                                                color: AppColors.error,
+                                                controller: timerController,
+                                                duration: Duration(
+                                                    seconds:
+                                                        gameModel.timerInSec ??
+                                                            10))),
+                                        const SizedBox(height: 16),
+                                        // Text(
+                                        //   _start.toString(),
+                                        //   style: TextStyle(
+                                        //       fontSize: 36,
+                                        //       color: Theme.of(context)
+                                        //           .colorScheme
+                                        //           .secondary),
+                                        // ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'the doctor chooses a player to protect',
+                                          style: AppStyles.s24w500
+                                              .copyWith(color: AppColors.white),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Wrap(
+                                          alignment: WrapAlignment.center,
+                                          children: charactersList
+                                              .map((character) => Column(
+                                                    children: [
+                                                      if (character.name !=
+                                                              null &&
+                                                          character.status ==
+                                                              1) ...[
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Column(
+                                                            children: [
+                                                              GestureDetector(
+                                                                onTap: () {
+                                                                  if (meInit
+                                                                          .myCharacter
+                                                                          ?.characterId ==
+                                                                      3) {
+                                                                    selectDoctorCharacter(
+                                                                        character);
+                                                                  }
+                                                                },
+                                                                child:
+                                                                    Container(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(3),
+                                                                  decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              40),
+                                                                      border: selectedDoctorCharactersList.any((element) =>
+                                                                              element.name ==
+                                                                              character
+                                                                                  .name)
+                                                                          ? Border.all(
+                                                                              strokeAlign: StrokeAlign.outside,
+                                                                              width: 2,
+                                                                              color: AppColors.error)
+                                                                          : const Border()),
+                                                                  child:
+                                                                      SvgPicture
+                                                                          .asset(
+                                                                    '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
+                                                                    height: 60,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 8),
+                                                              Text(ShortText
+                                                                  .fromText(
+                                                                      character
+                                                                              .name ??
+                                                                          ''))
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ]
+                                                    ],
+                                                  ))
+                                              .toList(),
+                                        )
+                                      ],
+                                      //SILENCER TIME
+                                      if (gameModel.isSilencerTime == true) ...[
+                                        Center(
+                                            child: LinearTimer(
+                                                onTimerEnd: () async {
+                                                  if (gameModel.createdBy ==
+                                                      meInit
+                                                          .myCharacter?.name) {
+                                                    await RoomRepository
+                                                            .updateIsSilencerTime(
+                                                                roomId:
+                                                                    widget.id,
+                                                                isSilencerTime:
+                                                                    false)
+                                                        .then((value) async {
+                                                      await RoomRepository
+                                                          .updateIsDetectiveTime(
+                                                              roomId: widget.id,
+                                                              isDetectiveTime:
+                                                                  true);
+                                                    });
+                                                  }
+
+                                                  // setState(() {});
+                                                  timerController.reset();
+                                                  timerController.start();
+                                                },
+                                                backgroundColor:
+                                                    AppColors.white,
+                                                color: AppColors.error,
+                                                controller: timerController,
+                                                duration: Duration(
+                                                    seconds:
+                                                        gameModel.timerInSec ??
+                                                            10))),
+                                        const SizedBox(height: 16),
+                                        // Text(
+                                        //   _start.toString(),
+                                        //   style: TextStyle(
+                                        //       fontSize: 36,
+                                        //       color: Theme.of(context)
+                                        //           .colorScheme
+                                        //           .secondary),
+                                        // ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'the silencer chooses a player to mute',
+                                          style: AppStyles.s24w500
+                                              .copyWith(color: AppColors.white),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Wrap(
+                                          alignment: WrapAlignment.center,
+                                          children: charactersList
+                                              .map((character) => Column(
+                                                    children: [
+                                                      if (character.name !=
+                                                              null &&
+                                                          character.status ==
+                                                              1) ...[
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Column(
+                                                            children: [
+                                                              GestureDetector(
+                                                                onTap: () {
+                                                                  if (meInit
+                                                                          .myCharacter
+                                                                          ?.characterId ==
+                                                                      5) {
+                                                                    selectSilencerCharacter(
+                                                                        character);
+                                                                  }
+                                                                },
+                                                                child:
+                                                                    Container(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(3),
+                                                                  decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              40),
+                                                                      border: selectedSilencerCharactersList.any((element) =>
+                                                                              element.name ==
+                                                                              character
+                                                                                  .name)
+                                                                          ? Border.all(
+                                                                              strokeAlign: StrokeAlign.outside,
+                                                                              width: 2,
+                                                                              color: AppColors.error)
+                                                                          : const Border()),
+                                                                  child:
+                                                                      SvgPicture
+                                                                          .asset(
+                                                                    '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
+                                                                    height: 60,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 8),
+                                                              Text(ShortText
+                                                                  .fromText(
+                                                                      character
+                                                                              .name ??
+                                                                          ''))
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ]
+                                                    ],
+                                                  ))
+                                              .toList(),
+                                        )
+                                      ],
+                                      //DETECTIVE TIME
+                                      if (gameModel.isDetectiveTime ==
+                                          true) ...[
+                                        Center(
+                                            child: LinearTimer(
+                                                onTimerEnd: () async {
+                                                  timerController.reset();
+
+                                                  if (gameModel.createdBy ==
+                                                      meInit
+                                                          .myCharacter?.name) {
+                                                    await RoomRepository
+                                                            .updateIsDetectiveTime(
+                                                                roomId:
+                                                                    widget.id,
+                                                                isDetectiveTime:
+                                                                    false)
+                                                        .then((value) async {
+                                                      await RoomRepository
+                                                          .updateIsSleepTime(
+                                                              roomId: widget.id,
+                                                              isSleepTime:
+                                                                  false);
+                                                    });
+                                                  }
+
+                                                  // setState(() {});
+                                                },
+                                                backgroundColor:
+                                                    AppColors.white,
+                                                color: AppColors.error,
+                                                controller: timerController,
+                                                duration: Duration(
+                                                    seconds:
+                                                        gameModel.timerInSec ??
+                                                            10))),
+                                        const SizedBox(height: 16),
+                                        // Text(
+                                        //   _start.toString(),
+                                        //   style: TextStyle(
+                                        //       fontSize: 36,
+                                        //       color: Theme.of(context)
+                                        //           .colorScheme
+                                        //           .secondary),
+                                        // ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'the detective guesses a mafia',
+                                          style: AppStyles.s24w500
+                                              .copyWith(color: AppColors.white),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Wrap(
+                                          alignment: WrapAlignment.center,
+                                          children: charactersList
+                                              .map((character) => Column(
+                                                    children: [
+                                                      if (character.name !=
+                                                              null &&
+                                                          character.status ==
+                                                              1) ...[
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Column(
+                                                            children: [
+                                                              GestureDetector(
+                                                                onTap: () {
+                                                                  if (meInit
+                                                                          .myCharacter
+                                                                          ?.characterId ==
+                                                                      4) {
+                                                                    detectiveGuessedCharacter =
+                                                                        guessMafiaFunction(
+                                                                            character);
+                                                                  }
+                                                                },
+                                                                child:
+                                                                    Container(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(3),
+                                                                  decoration: BoxDecoration(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              40),
+                                                                      border: selectedSilencerCharactersList.any((element) =>
+                                                                              element.name ==
+                                                                              character
+                                                                                  .name)
+                                                                          ? Border.all(
+                                                                              strokeAlign: StrokeAlign.outside,
+                                                                              width: 2,
+                                                                              color: AppColors.error)
+                                                                          : const Border()),
+                                                                  child:
+                                                                      SvgPicture
+                                                                          .asset(
+                                                                    '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
+                                                                    height: 60,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 8),
+                                                              Text(ShortText
+                                                                  .fromText(
+                                                                      character
+                                                                              .name ??
+                                                                          ''))
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ]
+                                                    ],
+                                                  ))
+                                              .toList(),
+                                        )
+                                      ],
+                                    ],
+                                    //CHARACTERS
+                                    if (gameModel.isSleepTime != true)
+                                      ListView.builder(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        shrinkWrap: true,
+                                        itemCount: charactersList.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          CharacterModel characterModel =
+                                              charactersList[index];
+                                          timerController.reset();
+                                          if (detectiveGuessedCharacter) {
+                                            screenPop(context);
+                                            detectiveGuessedCharacter = false;
+                                          }
+
+                                          return characterModel.name != null
+                                              ? ListTile(
+                                                  leading: SvgPicture.asset(
+                                                    '${AppAssets.avatar.icon}${characterModel.avatarIndex!}.svg',
+                                                    height: 40,
+                                                  ),
+                                                  minVerticalPadding: 16,
+                                                  title: Row(
+                                                    children: [
+                                                      Text(
+                                                        characterModel.name ??
+                                                            '',
+                                                        style: const TextStyle(
+                                                            fontSize: 30),
+                                                      ),
+                                                      const SizedBox(width: 10),
+                                                      Text(
+                                                          '(${CharacterId.characterListEng[characterModel.characterId! - 1]})'),
+                                                      if (meInit.myCharacter
+                                                              ?.name ==
+                                                          characterModel.name)
+                                                        const Text(
+                                                          ' (me)',
+                                                          style: TextStyle(
+                                                              color: AppColors
+                                                                  .error),
+                                                        )
+                                                    ],
+                                                  ),
+                                                  trailing: Text(CharacterStatus
+                                                          .statusListEnd[
+                                                      characterModel.status! -
+                                                          1]),
+                                                )
+                                              : const SizedBox();
+                                        },
+                                      ),
+                                    const SizedBox(height: 30),
+                                    Center(
+                                      child: Text(
+                                        '$count/${charactersList.length}',
+                                        style: TextStyle(
+                                            fontSize: 48,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else {
+                              return AppLoaderWidget();
+                            }
+                          }),
+                      bottomNavigationBar: gameModel.isSleepTime == false &&
+                              gameModel.createdBy == meInit.myCharacter?.name
+                          ? Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              height: 80,
+                              child: AppButton(
+                                text: 'Sleep',
+                                onPressed: () async {
+                                  final response =
+                                      await RoomRepository.updateIsSleepTime(
+                                          roomId: widget.id, isSleepTime: true);
+
+                                  await RoomRepository.updateIsMafiaTime(
+                                      roomId: widget.id, isMafiaTime: true);
+                                  await RoomRepository.updateIsTimeController(
+                                      roomId: widget.id,
+                                      isTimeController: true);
+
+                                  if (response) {}
+                                },
+                                color: Theme.of(context).colorScheme.primary,
+                              ))
+                          : gameModel.createdBy == meInit.myCharacter?.name
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  height: 80,
+                                  child: TextTap(
+                                    text: 'Stop timer',
+                                    onPressed: () async {
+                                      final response = await RoomRepository
+                                          .updateIsSleepTime(
+                                              roomId: widget.id,
+                                              isSleepTime: false);
+                                      if (detectiveGuessedCharacter) {
+                                        screenPop(context);
+                                      }
+                                      detectiveGuessedCharacter = false;
+
+                                      await RoomRepository.updateIsMafiaTime(
+                                          roomId: widget.id,
+                                          isMafiaTime: false);
+
+                                      await RoomRepository.updateIsDoctorTime(
+                                          roomId: widget.id,
+                                          isDoctorTime: false);
+
+                                      await RoomRepository.updateIsSilencerTime(
+                                          roomId: widget.id,
+                                          isSilencerTime: false);
+
+                                      await RoomRepository
+                                          .updateIsDetectiveTime(
+                                              roomId: widget.id,
+                                              isDetectiveTime: false);
+
+                                      await RoomRepository
+                                          .updateIsTimeController(
+                                              roomId: widget.id,
+                                              isTimeController: false);
+
+                                      if (response) {
+                                        stopTimer();
+                                      }
+                                    },
+                                  ))
+                              : const SizedBox(),
+                    );
+                  } else {
+                    return Scaffold(
+                      appBar: AppBar(),
+                      body: const SizedBox(),
+                    );
+                  }
+                }),
       ),
     );
   }
