@@ -15,8 +15,67 @@ class RoomRepository {
           .then((result) {
         GameModel gameModel = GameModel.fromFirestore(result);
 
-        return gameModel.isTimeController ?? false ? true : false;
+        return gameModel.isSleepTime ?? false ? true : false;
       });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> getIfGameAdmin({
+    required String roomId,
+    required String name,
+  }) async {
+    try {
+      return await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .get()
+          .then((result) {
+        GameModel gameModel = GameModel.fromFirestore(result);
+
+        return gameModel.createdBy == name;
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> getIfMafiaValue({
+    required String roomId,
+  }) async {
+    try {
+      return await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .get()
+          .then((result) {
+        GameModel gameModel = GameModel.fromFirestore(result);
+
+        return gameModel.isMafiaTime ?? false;
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  //Timer controller
+  static Future<bool> updateAllTime({
+    required String roomId,
+    required bool isValue,
+  }) async {
+    try {
+      return await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .update({
+        'isTimeController': isValue,
+        'isSleepTime': isValue,
+        // 'isMafiaTime': isValue,
+        // 'isDoctorTime': isValue,
+        // 'isSilencerTime': isValue,
+        // 'isDetectiveTime': isValue,
+      }).then((value) => true);
     } catch (e) {
       return false;
     }

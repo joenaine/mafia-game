@@ -8,14 +8,14 @@ part 'game_model.g.dart';
 class GameModel {
   final String? roomId;
   final List<int>? charactersList;
-  final int? timerInSec;
-  final bool? isSleepTime;
-  final bool? isMafiaTime;
-  final bool? isDoctorTime;
-  final bool? isDetectiveTime;
-  final bool? isSilencerTime;
-  final bool? isTimeController;
-  final String? createdBy;
+  int? timerInSec;
+  bool? isSleepTime;
+  bool? isMafiaTime;
+  bool? isDoctorTime;
+  bool? isDetectiveTime;
+  bool? isSilencerTime;
+  bool? isTimeController;
+  String? createdBy;
 
   GameModel(
       {this.isTimeController,

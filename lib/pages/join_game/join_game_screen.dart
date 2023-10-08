@@ -5,7 +5,7 @@ import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:mafiagame/constants/screen_navigation_const.dart';
 import 'package:mafiagame/pages/create_game/create_game_repository.dart';
 import 'package:mafiagame/pages/join_game/join_game_provider.dart';
-import 'package:mafiagame/pages/room/room_main_screen.dart';
+import 'package:mafiagame/pages/room/room_offline_screen.dart';
 import 'package:mafiagame/pages/room/room_repository.dart';
 import 'package:mafiagame/widgets/alert_dialog.dart';
 import 'package:mafiagame/widgets/app_button.dart';
@@ -147,18 +147,45 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                             await RoomRepository.getIfGameStarted(
                                 roomId: concatenate.toString());
                         isTimerRunning
+                            // ignore: use_build_context_synchronously
                             ? AlertDialogCustom.customAlert(
                                 context,
                                 title: 'The Game is\nin Sleep Mode',
                                 content: null,
-                                generalButton: 'generalButton',
+                                generalButton: 'Back',
                                 onTapGeneral: () {
                                   screenPop(context);
                                 },
+                                subgeneralButton: 'Awake',
+                                onTapSubgeneral: () async {
+                                  final ifAdmin =
+                                      await RoomRepository.getIfGameAdmin(
+                                              roomId: concatenate.toString(),
+                                              name: _nameController.text
+                                                  .trim()
+                                                  .toLowerCase())
+                                          .then((value) async {
+                                    return await RoomRepository.updateAllTime(
+                                        roomId: concatenate.toString(),
+                                        isValue: false);
+                                  });
+                                  if (ifAdmin) {
+                                    // ignore: use_build_context_synchronously
+                                    changeScreen(
+                                        context,
+                                        RoomMainScreenOffline(
+                                          id: concatenate.toString(),
+                                          name: _nameController.text
+                                              .trim()
+                                              .toLowerCase(),
+                                        ));
+                                  }
+                                },
                               )
+                            // ignore: use_build_context_synchronously
                             : changeScreen(
                                 context,
-                                RoomMainScreen(
+                                RoomMainScreenOffline(
                                   id: concatenate.toString(),
                                   name:
                                       _nameController.text.trim().toLowerCase(),

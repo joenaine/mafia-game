@@ -23,16 +23,16 @@ import 'package:mafiagame/widgets/nav_back.dart';
 import 'package:mafiagame/widgets/text_tap.dart';
 import 'package:provider/provider.dart';
 
-class RoomMainScreen extends StatefulWidget {
-  const RoomMainScreen({super.key, required this.id, this.name});
+class RoomMainScreenOffline extends StatefulWidget {
+  const RoomMainScreenOffline({super.key, required this.id, this.name});
   final String id;
   final String? name;
 
   @override
-  State<RoomMainScreen> createState() => _RoomMainScreenState();
+  State<RoomMainScreenOffline> createState() => _RoomMainScreenOfflineState();
 }
 
-class _RoomMainScreenState extends State<RoomMainScreen>
+class _RoomMainScreenOfflineState extends State<RoomMainScreenOffline>
     with TickerProviderStateMixin {
   late LinearTimerController timerController;
   bool _isTimerRunning = false;
@@ -82,7 +82,7 @@ class _RoomMainScreenState extends State<RoomMainScreen>
 
   void stopTimer() {
     timerController.stop();
-    timerController.start();
+    // timerController.start();
     timerController.reset();
 
     // _timer.cancel();
@@ -179,6 +179,19 @@ class _RoomMainScreenState extends State<RoomMainScreen>
   }
 
   bool isLoading = false;
+  GameModel gameModel = GameModel(
+      isDetectiveTime: false,
+      isDoctorTime: false,
+      isMafiaTime: false,
+      isSilencerTime: false,
+      isTimeController: false,
+      isSleepTime: false);
+
+  Future<void> getMafiaTime() async {
+    gameModel.isMafiaTime =
+        await RoomRepository.getIfMafiaValue(roomId: widget.id);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,8 +215,16 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    GameModel gameModel =
+                    GameModel gameModelRaw =
                         GameModel.fromFirestore(snapshot.data!);
+                    gameModel.isSleepTime = gameModelRaw.isSleepTime;
+                    gameModel.createdBy = gameModelRaw.createdBy;
+                    gameModel.timerInSec = gameModelRaw.timerInSec;
+
+                    // gameModel.isDoctorTime = false;
+                    // gameModel.isSilencerTime = false;
+                    // gameModel.isDetectiveTime = false;
+                    // gameModel.isTimeController = false;
 
                     return Scaffold(
                       backgroundColor: Theme.of(context).colorScheme.background,
@@ -213,7 +234,7 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                             // stopTimer();
                           },
                         ),
-                        title: Text(gameModel.roomId ?? ''),
+                        title: Text(gameModelRaw.roomId ?? ''),
                         titleTextStyle:
                             const TextStyle(fontSize: 40, fontFamily: 'Bebas'),
                       ),
@@ -243,40 +264,44 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                                 }
                               }
 
-                              if (gameModel.isTimeController == true) {
+                              if (gameModel.isSleepTime == true) {
                                 // startTimer(gameModel.timerInSec ?? 10);
+                                // timerController.stop();
+                                // timerController.reset();
                                 timerController.start();
                               }
 
                               return SingleChildScrollView(
                                 child: Column(
                                   children: [
-                                    if (gameModel.isSleepTime ?? false) ...[
+                                    if (gameModel.isSleepTime == true) ...[
                                       if (gameModel.isMafiaTime == true) ...[
                                         Center(
                                             child: LinearTimer(
-                                                onTimerEnd: () async {
-                                                  if (gameModel.createdBy ==
-                                                      meInit
-                                                          .myCharacter?.name) {
-                                                    await RoomRepository
-                                                            .updateIsMafiaTime(
-                                                                roomId:
-                                                                    widget.id,
-                                                                isMafiaTime:
-                                                                    false)
-                                                        .then((value) async {
-                                                      await RoomRepository
-                                                          .updateIsDoctorTime(
-                                                              roomId: widget.id,
-                                                              isDoctorTime:
-                                                                  true);
-                                                    });
-                                                  }
+                                                onTimerEnd: () {
+                                                  print(
+                                                      '${gameModel.isMafiaTime} BOOL First');
+                                                  gameModel.isMafiaTime = false;
+                                                  print(
+                                                      '${gameModel.isMafiaTime} BOOL');
+                                                  // if (gameModel.createdBy ==
+                                                  //     meInit
+                                                  //         .myCharacter?.name) {
+                                                  //   await RoomRepository
+                                                  //           .updateIsMafiaTime(
+                                                  //               roomId:
+                                                  //                   widget.id,
+                                                  //               isMafiaTime:
+                                                  //                   false)
+                                                  //       .then((value) async {});
+                                                  // }
 
-                                                  // setState(() {});
+                                                  gameModel.isDoctorTime = true;
+
                                                   timerController.reset();
                                                   timerController.start();
+                                                  // setState(() {});
+                                                  setState(() {});
                                                 },
                                                 backgroundColor:
                                                     AppColors.white,
@@ -373,27 +398,17 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                                       if (gameModel.isDoctorTime == true) ...[
                                         Center(
                                             child: LinearTimer(
-                                                onTimerEnd: () async {
-                                                  if (gameModel.createdBy ==
-                                                      meInit
-                                                          .myCharacter?.name) {
-                                                    await RoomRepository
-                                                            .updateIsDoctorTime(
-                                                                roomId:
-                                                                    widget.id,
-                                                                isDoctorTime:
-                                                                    false)
-                                                        .then((value) async {
-                                                      await RoomRepository
-                                                          .updateIsSilencerTime(
-                                                              roomId: widget.id,
-                                                              isSilencerTime:
-                                                                  true);
-                                                    });
-                                                  }
+                                                onTimerEnd: () {
+                                                  print(
+                                                      '${gameModel.isMafiaTime} BOOL Third');
+                                                  gameModel.isDoctorTime =
+                                                      false;
+                                                  gameModel.isSilencerTime =
+                                                      true;
 
                                                   timerController.reset();
                                                   timerController.start();
+                                                  setState(() {});
                                                 },
                                                 backgroundColor:
                                                     AppColors.white,
@@ -490,28 +505,15 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                                       if (gameModel.isSilencerTime == true) ...[
                                         Center(
                                             child: LinearTimer(
-                                                onTimerEnd: () async {
-                                                  if (gameModel.createdBy ==
-                                                      meInit
-                                                          .myCharacter?.name) {
-                                                    await RoomRepository
-                                                            .updateIsSilencerTime(
-                                                                roomId:
-                                                                    widget.id,
-                                                                isSilencerTime:
-                                                                    false)
-                                                        .then((value) async {
-                                                      await RoomRepository
-                                                          .updateIsDetectiveTime(
-                                                              roomId: widget.id,
-                                                              isDetectiveTime:
-                                                                  true);
-                                                    });
-                                                  }
+                                                onTimerEnd: () {
+                                                  gameModel.isSilencerTime =
+                                                      false;
+                                                  gameModel.isDetectiveTime =
+                                                      true;
 
-                                                  // setState(() {});
                                                   timerController.reset();
                                                   timerController.start();
+                                                  setState(() {});
                                                 },
                                                 backgroundColor:
                                                     AppColors.white,
@@ -610,24 +612,22 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                                         Center(
                                             child: LinearTimer(
                                                 onTimerEnd: () async {
+                                                  // timerController.stop();
                                                   timerController.reset();
 
+                                                  gameModel.isDetectiveTime =
+                                                      false;
+                                                  setState(() {});
                                                   if (gameModel.createdBy ==
                                                       meInit
                                                           .myCharacter?.name) {
-                                                    await RoomRepository
-                                                            .updateIsDetectiveTime(
+                                                    final response =
+                                                        await RoomRepository
+                                                            .updateIsSleepTime(
                                                                 roomId:
                                                                     widget.id,
-                                                                isDetectiveTime:
-                                                                    false)
-                                                        .then((value) async {
-                                                      await RoomRepository
-                                                          .updateIsSleepTime(
-                                                              roomId: widget.id,
-                                                              isSleepTime:
-                                                                  false);
-                                                    });
+                                                                isSleepTime:
+                                                                    false);
                                                   }
 
                                                   // setState(() {});
@@ -817,6 +817,14 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                                         roomId: widget.id,
                                         isTimeController: true);
                                   }
+                                  // gameModel.isMafiaTime = true;
+                                  gameModel.isTimeController = true;
+                                  await getMafiaTime();
+                                  setState(() {});
+
+                                  // await RoomRepository.updateIsTimeController(
+                                  //     roomId: widget.id,
+                                  //     isTimeController: true);
 
                                   if (response) {}
                                 },
@@ -834,32 +842,22 @@ class _RoomMainScreenState extends State<RoomMainScreen>
                                           .updateIsSleepTime(
                                               roomId: widget.id,
                                               isSleepTime: false);
+                                      gameModel.isSleepTime = false;
                                       if (detectiveGuessedCharacter) {
                                         screenPop(context);
                                       }
                                       detectiveGuessedCharacter = false;
+                                      gameModel.isMafiaTime = false;
+                                      gameModel.isDoctorTime = false;
+                                      gameModel.isSilencerTime = false;
+                                      gameModel.isDetectiveTime = false;
+                                      gameModel.isTimeController = false;
+                                      setState(() {});
 
-                                      await RoomRepository.updateIsMafiaTime(
-                                          roomId: widget.id,
-                                          isMafiaTime: false);
-
-                                      await RoomRepository.updateIsDoctorTime(
-                                          roomId: widget.id,
-                                          isDoctorTime: false);
-
-                                      await RoomRepository.updateIsSilencerTime(
-                                          roomId: widget.id,
-                                          isSilencerTime: false);
-
-                                      await RoomRepository
-                                          .updateIsDetectiveTime(
-                                              roomId: widget.id,
-                                              isDetectiveTime: false);
-
-                                      await RoomRepository
-                                          .updateIsTimeController(
-                                              roomId: widget.id,
-                                              isTimeController: false);
+                                      // await RoomRepository
+                                      //     .updateIsTimeController(
+                                      //         roomId: widget.id,
+                                      //         isTimeController: false);
 
                                       if (response) {
                                         stopTimer();
