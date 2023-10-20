@@ -10,9 +10,15 @@ class CharacterModel {
   final String? name;
   final int? status;
   final int? avatarIndex;
+  final bool? isSleepModeOn;
 
   CharacterModel(
-      {this.characterId, this.status, this.name, this.docId, this.avatarIndex});
+      {this.characterId,
+      this.status,
+      this.name,
+      this.docId,
+      this.avatarIndex,
+      this.isSleepModeOn});
   factory CharacterModel.fromJson(Map<String, dynamic> json) =>
       _$CharacterModelFromJson(json);
 

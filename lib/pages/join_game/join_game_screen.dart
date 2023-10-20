@@ -5,7 +5,7 @@ import 'package:mafiagame/constants/app_colors_const.dart';
 import 'package:mafiagame/constants/screen_navigation_const.dart';
 import 'package:mafiagame/pages/create_game/create_game_repository.dart';
 import 'package:mafiagame/pages/join_game/join_game_provider.dart';
-import 'package:mafiagame/pages/room/room_offline_screen.dart';
+import 'package:mafiagame/pages/room/room_mafia_screen.dart';
 import 'package:mafiagame/pages/room/room_repository.dart';
 import 'package:mafiagame/widgets/alert_dialog.dart';
 import 'package:mafiagame/widgets/app_button.dart';
@@ -173,7 +173,7 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                                     // ignore: use_build_context_synchronously
                                     changeScreen(
                                         context,
-                                        RoomMainScreenOffline(
+                                        RoomMafiaScreen(
                                           id: concatenate.toString(),
                                           name: _nameController.text
                                               .trim()
@@ -185,7 +185,7 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                             // ignore: use_build_context_synchronously
                             : changeScreen(
                                 context,
-                                RoomMainScreenOffline(
+                                RoomMafiaScreen(
                                   id: concatenate.toString(),
                                   name:
                                       _nameController.text.trim().toLowerCase(),

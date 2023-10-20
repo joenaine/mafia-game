@@ -13,6 +13,7 @@ CharacterModel _$CharacterModelFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String?,
       docId: json['docId'] as String?,
       avatarIndex: json['avatarIndex'] as int?,
+      isSleepModeOn: json['isSleepModeOn'] as bool?,
     );
 
 Map<String, dynamic> _$CharacterModelToJson(CharacterModel instance) =>
@@ -22,4 +23,5 @@ Map<String, dynamic> _$CharacterModelToJson(CharacterModel instance) =>
       'name': instance.name,
       'status': instance.status,
       'avatarIndex': instance.avatarIndex,
+      'isSleepModeOn': instance.isSleepModeOn,
     };
