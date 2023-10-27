@@ -7,14 +7,15 @@ part 'list_character_model.g.dart';
 
 @JsonSerializable()
 class ListCharacterModel {
-  final List<CharacterModel>? doctorSelectionList;
-  final List<CharacterModel>? mafiaSelectionList;
-  final List<CharacterModel>? silencerSelectionList;
+  List<CharacterModel>? doctorSelectionList;
+  List<CharacterModel>? mafiaSelectionList;
+  List<CharacterModel>? silencerSelectionList;
 
-  ListCharacterModel(
-      {this.doctorSelectionList,
-      this.mafiaSelectionList,
-      this.silencerSelectionList});
+  ListCharacterModel({
+    this.doctorSelectionList,
+    this.mafiaSelectionList,
+    this.silencerSelectionList,
+  });
   factory ListCharacterModel.fromJson(Map<String, dynamic> json) =>
       _$ListCharacterModelFromJson(json);
 

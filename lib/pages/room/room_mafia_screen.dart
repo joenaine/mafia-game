@@ -35,6 +35,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
     with TickerProviderStateMixin {
   late LinearTimerController timerController;
   bool _isTimerRunning = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +43,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _isTimerRunning =
           await RoomRepository.getIfGameStarted(roomId: widget.id);
+
       setState(() {});
     });
   }
@@ -189,6 +191,14 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
   bool isMafia = true;
   bool isLoadingSleepButton = false;
 
+  void clearSelectionList() {
+    selectedMafiaCharactersList.clear();
+    selectedDoctorCharactersList.clear();
+    selectedSilencerCharactersList.clear();
+  }
+
+  bool isRolesShown = false;
+
   @override
   Widget build(BuildContext context) {
     final meInit = Provider.of<JoinGameProvider>(context);
@@ -260,6 +270,56 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                     },
                                   ),
                                   title: Text(gameModelRaw.roomId ?? ''),
+                                  actions: [
+                                    if (gameModelRaw.createdBy ==
+                                        meInit.myCharacter?.name)
+                                      IconButton(
+                                          onPressed: () {
+                                            AlertDialogCustom.customAlert(
+                                              context,
+                                              title: 'Show Character Roles',
+                                              content:
+                                                  'Do you want to see roles of all characters"',
+                                              generalButton: 'Show',
+                                              subgeneralButton: 'Hide',
+                                              onTapGeneral: () async {
+                                                screenPop(context);
+                                                isRolesShown = true;
+                                                setState(() {});
+                                              },
+                                              onTapSubgeneral: () {
+                                                screenPop(context);
+                                                isRolesShown = false;
+                                                setState(() {});
+                                              },
+                                            );
+                                          },
+                                          icon: const Icon(
+                                              Icons.remove_red_eye_outlined)),
+                                    IconButton(
+                                        onPressed: () async {
+                                          AlertDialogCustom.customAlert(
+                                            context,
+                                            title: 'New Game',
+                                            content:
+                                                'Do you want to change status of all characters to "Alive"',
+                                            generalButton: 'Restart',
+                                            subgeneralButton: 'Back',
+                                            onTapGeneral: () async {
+                                              screenPop(context);
+                                              await RoomRepository
+                                                  .resetAllCharacters(
+                                                      roomId: widget.id,
+                                                      charlength: charactersList
+                                                          .length);
+                                            },
+                                            onTapSubgeneral: () {
+                                              screenPop(context);
+                                            },
+                                          );
+                                        },
+                                        icon: const Icon(Icons.refresh)),
+                                  ],
                                   titleTextStyle: const TextStyle(
                                       fontSize: 40, fontFamily: 'Bebas'),
                                 ),
@@ -574,6 +634,9 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                           Center(
                                               child: LinearTimer(
                                                   onTimerEnd: () async {
+                                                    await RoomRepository
+                                                        .deleteCollectionSelectedChars(
+                                                            widget.id);
                                                     gameModel.isDetectiveTime =
                                                         false;
 
@@ -588,7 +651,18 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                                         .docId!)
                                                             .then(
                                                                 (value) async {
-                                                      return await RoomRepository
+                                                      await RoomRepository.sendSelectedCharacters(
+                                                          roomId: widget.id,
+                                                          docId: meInit
+                                                              .myCharacter!
+                                                              .docId!,
+                                                          selectedDoctorDocIds:
+                                                              selectedDoctorCharactersList,
+                                                          selectedMafiaDocIds:
+                                                              selectedMafiaCharactersList,
+                                                          selectedSilencerDocIds:
+                                                              selectedSilencerCharactersList);
+                                                      await RoomRepository
                                                           .isAllCharactersSleepOff(
                                                         roomId: widget.id,
                                                       ).then((value) async {
@@ -596,44 +670,84 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                         timerController.reset();
                                                       });
                                                     });
-                                                    bool response =
-                                                        await RoomRepository
-                                                            .getIsSleepTimeOff(
-                                                                roomId:
-                                                                    widget.id);
-                                                    if (response) {
-                                                      //TODO: ADD COUNTER IF ALL USERS HAD SENT
-                                                      await RoomRepository.sendSelectedCharacters(
-                                                          roomId: widget.id,
-                                                          selectedDoctorDocIds:
-                                                              selectedDoctorCharactersList,
-                                                          selectedMafiaDocIds:
-                                                              selectedMafiaCharactersList,
-                                                          selectedSilencerDocIds:
-                                                              selectedSilencerCharactersList);
+                                                    List<CharacterModel>
+                                                        aliveCharsList = [];
+
+                                                    for (var i = 0;
+                                                        i <
+                                                            charactersList
+                                                                .length;
+                                                        i++) {
+                                                      if (charactersList[i]
+                                                              .status ==
+                                                          CharacterStatus
+                                                              .alive) {
+                                                        aliveCharsList.add(
+                                                            charactersList[i]);
+                                                      }
                                                     }
-                                                    //TODO: THEN ADD STATEMENT IF ALL HAD SENT
 
-                                                    await RoomRepository
-                                                            .getSelectedCharacters(
+                                                    bool isResult =
+                                                        await RoomRepository
+                                                            .showResults(
                                                                 roomId:
-                                                                    widget.id)
-                                                        .then((value) {
-                                                      // await RoomRepository
-                                                      //     .deleteSelectedChars(
-                                                      //         widget.id);
+                                                                    widget.id,
+                                                                length:
+                                                                    aliveCharsList
+                                                                        .length);
+                                                    print(
+                                                        '$isResult Bool IsResult LENGTH');
 
-                                                      AlertDialogCustom
-                                                          .customAlert(
-                                                        context,
-                                                        title: 'Result',
-                                                        content: value,
-                                                        generalButton: 'ok',
-                                                        onTapGeneral: () {
-                                                          screenPop(context);
-                                                        },
-                                                      );
-                                                    });
+                                                    if (isResult) {
+                                                      await RoomRepository
+                                                              .getSelectedCharacters(
+                                                                  roomId:
+                                                                      widget.id)
+                                                          .then((value) async {
+                                                        AlertDialogCustom
+                                                            .customAlert(
+                                                          context,
+                                                          title: 'Result',
+                                                          content: value,
+                                                          generalButton: 'ok',
+                                                          onTapGeneral: () {
+                                                            screenPop(context);
+                                                          },
+                                                        );
+                                                      });
+                                                    }
+
+                                                    // await RoomRepository
+                                                    //         .getIsSleepTimeOff(
+                                                    //             roomId:
+                                                    //                 widget.id)
+                                                    //     .then((value) async {
+                                                    //   if (value) {
+                                                    //
+                                                    //         .then(
+                                                    //             (value) async {
+                                                    //       await RoomRepository
+                                                    //           .clearSelectedChars(
+                                                    //               widget.id);
+
+                                                    //       AlertDialogCustom
+                                                    //           .customAlert(
+                                                    //         context,
+                                                    //         title: 'Result',
+                                                    //         content: value,
+                                                    //         generalButton: 'ok',
+                                                    //         onTapGeneral: () {
+                                                    //           screenPop(
+                                                    //               context);
+                                                    //         },
+                                                    //       );
+                                                    // });
+                                                    // }
+                                                    // });
+
+                                                    //TODO: ADD COUNTER IF ALL USERS HAD SENT
+
+                                                    //TODO: THEN ADD STATEMENT IF ALL HAD SENT
                                                   },
                                                   backgroundColor:
                                                       AppColors.white,
@@ -759,8 +873,9 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                         ),
                                                         const SizedBox(
                                                             width: 10),
-                                                        Text(
-                                                            '(${CharacterId.characterListEng[characterModel.characterId! - 1]})'),
+                                                        if (isRolesShown)
+                                                          Text(
+                                                              '(${CharacterId.characterListEng[characterModel.characterId! - 1]})'),
                                                         if (meInit.myCharacter
                                                                 ?.name ==
                                                             characterModel.name)
@@ -822,6 +937,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                             setState(() {
                                               isLoadingSleepButton = true;
                                             });
+                                            clearSelectionList();
                                             await RoomRepository.setSleepModeOn(
                                                 roomId: widget.id,
                                                 docId:

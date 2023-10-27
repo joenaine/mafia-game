@@ -19,6 +19,15 @@ GameModel _$GameModelFromJson(Map<String, dynamic> json) => GameModel(
       timerInSec: json['timerInSec'] as int?,
       isSleepTime: json['isSleepTime'] as bool?,
       createdBy: json['createdBy'] as String?,
+      doctorSelectionList: (json['doctorSelectionList'] as List<dynamic>?)
+          ?.map((e) => CharacterModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      mafiaSelectionList: (json['mafiaSelectionList'] as List<dynamic>?)
+          ?.map((e) => CharacterModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      silencerSelectionList: (json['silencerSelectionList'] as List<dynamic>?)
+          ?.map((e) => CharacterModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$GameModelToJson(GameModel instance) => <String, dynamic>{
@@ -32,4 +41,7 @@ Map<String, dynamic> _$GameModelToJson(GameModel instance) => <String, dynamic>{
       'isSilencerTime': instance.isSilencerTime,
       'isTimeController': instance.isTimeController,
       'createdBy': instance.createdBy,
+      'doctorSelectionList': instance.doctorSelectionList,
+      'mafiaSelectionList': instance.mafiaSelectionList,
+      'silencerSelectionList': instance.silencerSelectionList,
     };

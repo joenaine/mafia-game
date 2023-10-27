@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mafiagame/pages/room/model/character_model.dart';
 import 'package:mafiagame/services/types.dart';
 
 part 'game_model.g.dart';
@@ -16,6 +17,9 @@ class GameModel {
   bool? isSilencerTime;
   bool? isTimeController;
   String? createdBy;
+  List<CharacterModel>? doctorSelectionList;
+  List<CharacterModel>? mafiaSelectionList;
+  List<CharacterModel>? silencerSelectionList;
 
   GameModel(
       {this.isTimeController,
@@ -27,7 +31,10 @@ class GameModel {
       this.charactersList,
       this.timerInSec,
       this.isSleepTime,
-      this.createdBy});
+      this.createdBy,
+      this.doctorSelectionList,
+      this.mafiaSelectionList,
+      this.silencerSelectionList});
   factory GameModel.fromJson(Map<String, dynamic> json) =>
       _$GameModelFromJson(json);
 

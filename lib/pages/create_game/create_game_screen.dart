@@ -7,7 +7,7 @@ import 'package:mafiagame/constants/screen_navigation_const.dart';
 import 'package:mafiagame/pages/create_game/create_game_provider.dart';
 import 'package:mafiagame/pages/create_game/create_game_repository.dart';
 import 'package:mafiagame/pages/create_game/model/game_model.dart';
-import 'package:mafiagame/pages/room/room_main_screen.dart';
+import 'package:mafiagame/pages/room/room_mafia_screen.dart';
 import 'package:mafiagame/services/uui_generator.dart';
 import 'package:mafiagame/widgets/app_button.dart';
 import 'package:mafiagame/widgets/app_hide_keyboard_widget.dart';
@@ -245,7 +245,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                               });
                               changeScreen(
                                   context,
-                                  RoomMainScreen(
+                                  RoomMafiaScreen(
                                     id: g.roomId!,
                                     name: _nicknameController.text
                                         .trim()

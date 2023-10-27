@@ -14,6 +14,7 @@ class AlertDialogCustom {
     String? subgeneralButton,
     required VoidCallback onTapGeneral,
     VoidCallback? onTapSubgeneral,
+    Function()? onThen,
   }) {
     showDialog(
         context: context,
@@ -46,7 +47,11 @@ class AlertDialogCustom {
               )),
             ],
           );
-        });
+        }).then(
+      (value) {
+        onThen;
+      },
+    );
   }
 
   static void customAlertDismissible(

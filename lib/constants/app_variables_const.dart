@@ -1,6 +1,7 @@
 class CollectionName {
   static const rooms = 'rooms';
   static const characters = 'characters';
+  static const selectedChars = 'selectedChars';
 }
 
 class CharacterId {

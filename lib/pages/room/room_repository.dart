@@ -352,15 +352,20 @@ class RoomRepository {
           charactersList.add(CharacterModel.fromFirestore(category));
         }
         int count = 0;
+        int aliveStatus = 0;
         for (int i = 0; i < charactersList.length; i++) {
-          if (charactersList[i].isSleepModeOn == true) {
+          if (charactersList[i].isSleepModeOn == true &&
+              charactersList[i].status == CharacterStatus.alive) {
             count++;
           }
+          if (charactersList[i].status == CharacterStatus.alive) {
+            aliveStatus++;
+          }
         }
-        if (count == charactersList.length) {
+        if (count == aliveStatus) {
           updateIsSleepTime(roomId: roomId, isSleepTime: true);
         }
-        return count == charactersList.length;
+        return count == aliveStatus;
       });
     } catch (e) {
       return false;
@@ -383,18 +388,23 @@ class RoomRepository {
           charactersList.add(CharacterModel.fromFirestore(category));
         }
         int count = 0;
+        int aliveStatus = 0;
         for (int i = 0; i < charactersList.length; i++) {
-          if (charactersList[i].isSleepModeOn == false) {
+          if (charactersList[i].isSleepModeOn == false &&
+              charactersList[i].status == CharacterStatus.alive) {
             count++;
           }
+          if (charactersList[i].status == CharacterStatus.alive) {
+            aliveStatus++;
+          }
         }
-        if (count == charactersList.length) {
+        if (count == aliveStatus) {
           bool isSleepOn = await getIfSleepOn(roomId: roomId);
           if (isSleepOn) {
             await updateIsSleepTime(roomId: roomId, isSleepTime: false);
           }
         }
-        return count == charactersList.length;
+        return count == aliveStatus;
       });
     } catch (e) {
       return false;
@@ -404,24 +414,26 @@ class RoomRepository {
   //FORM SELECTED CHARACTERS
   static Future<bool> sendSelectedCharacters({
     required String roomId,
+    required String docId,
     required List<CharacterModel> selectedDoctorDocIds,
     required List<CharacterModel> selectedMafiaDocIds,
     required List<CharacterModel> selectedSilencerDocIds,
   }) async {
     try {
+      const collectionName = 'selectedChars';
       DocumentSnapshot documentSnapshot = await firestore
           .collection(CollectionName.rooms)
           .doc(roomId)
-          .collection('selectedChars')
-          .doc('1')
+          .collection(collectionName)
+          .doc(docId)
           .get();
 
       if (!documentSnapshot.exists) {
         return await firestore
             .collection(CollectionName.rooms)
             .doc(roomId)
-            .collection('selectedChars')
-            .doc('1')
+            .collection(collectionName)
+            .doc(docId)
             .set({
           'doctorSelectionList': FieldValue.arrayUnion(
               selectedDoctorDocIds.map((e) => e.toJson()).toList()),
@@ -431,18 +443,19 @@ class RoomRepository {
               selectedSilencerDocIds.map((e) => e.toJson()).toList()),
         }).then((value) => true);
       }
+
       return await firestore
           .collection(CollectionName.rooms)
           .doc(roomId)
-          .collection('selectedChars')
-          .doc('1')
+          .collection(collectionName)
+          .doc(docId)
           .update({
-        'doctorSelectionList': FieldValue.arrayUnion(
-            selectedDoctorDocIds.map((e) => e.toJson()).toList()),
-        'mafiaSelectionList': FieldValue.arrayUnion(
-            selectedMafiaDocIds.map((e) => e.toJson()).toList()),
-        'silencerSelectionList': FieldValue.arrayUnion(
-            selectedSilencerDocIds.map((e) => e.toJson()).toList()),
+        'doctorSelectionList':
+            selectedDoctorDocIds.map((e) => e.toJson()).toList(),
+        'mafiaSelectionList':
+            selectedMafiaDocIds.map((e) => e.toJson()).toList(),
+        'silencerSelectionList':
+            selectedSilencerDocIds.map((e) => e.toJson()).toList(),
       }).then((value) => true);
     } catch (e) {
       return false;
@@ -453,46 +466,87 @@ class RoomRepository {
     required String roomId,
   }) async {
     try {
+      const collectionName = 'selectedChars';
       return await firestore
           .collection(CollectionName.rooms)
           .doc(roomId)
-          .collection('selectedChars')
-          .doc('1')
+          .collection(collectionName)
           .get()
           .then((value) async {
-        ListCharacterModel selCharList =
-            ListCharacterModel.fromFirestore(value);
-        List<String> mafiaList = mergeDuplicatedNames(
-            selCharList.mafiaSelectionList!.map((e) => e.name!).toList());
-        List<String> doctorList = mergeDuplicatedNames(
-            selCharList.doctorSelectionList!.map((e) => e.name!).toList());
-        List<String> silencerList = mergeDuplicatedNames(
-            selCharList.silencerSelectionList!.map((e) => e.name!).toList());
+        List<ListCharacterModel> allSelectedCharactersList = [];
+        for (QueryDocumentSnapshot<Map<String, dynamic>> category
+            in value.docs) {
+          allSelectedCharactersList
+              .add(ListCharacterModel.fromFirestore(category));
+        }
+        List<CharacterModel> allMafiaList = [];
+        List<CharacterModel> allDoctorList = [];
+        List<CharacterModel> allSilencerList = [];
+        for (var element in allSelectedCharactersList) {
+          allMafiaList.addAll(element.mafiaSelectionList ?? []);
+        }
+        for (var element in allSelectedCharactersList) {
+          allDoctorList.addAll(element.doctorSelectionList ?? []);
+        }
+        for (var element in allSelectedCharactersList) {
+          allSilencerList.addAll(element.silencerSelectionList ?? []);
+        }
+
+        List<String> mafiaList =
+            mergeDuplicatedNames(allMafiaList.map((e) => e.name!).toList());
+        List<String> doctorList =
+            mergeDuplicatedNames(allDoctorList.map((e) => e.name!).toList());
+        List<String> silencerList =
+            mergeDuplicatedNames(allSilencerList.map((e) => e.name!).toList());
         String mafiaSelected = 'unmatched';
         String doctorSelected = 'unmatched';
         String silencerSelected = 'unmatched';
         if (mafiaList.length == 1) {
           mafiaSelected = mafiaList.first;
           await RoomRepository.setDeadCharacterStatus(
-              roomId: roomId,
-              docId: selCharList.mafiaSelectionList?.first.docId ?? '');
+              roomId: roomId, docId: allMafiaList.first.docId ?? '');
         }
         if (doctorList.length == 1) {
           doctorSelected = doctorList.first;
           await RoomRepository.setAliveCharacterStatus(
-              roomId: roomId,
-              docId: selCharList.mafiaSelectionList?.first.docId ?? '');
+              roomId: roomId, docId: allDoctorList.first.docId ?? '');
         }
         if (silencerList.length == 1) {
           silencerSelected = silencerList.first;
           await RoomRepository.setMutedCharacterStatus(
-              roomId: roomId,
-              docId: selCharList.mafiaSelectionList?.first.docId ?? '');
+              roomId: roomId, docId: allSilencerList.first.docId ?? '');
         }
         return 'DEAD : $mafiaSelected \n Healed: $doctorSelected \n Muted: $silencerSelected';
       });
     } catch (e) {
       return '';
+    }
+  }
+
+  static Future<bool> deleteCollectionSelectedChars(String roomId) async {
+    try {
+      QuerySnapshot documentSnapshot = await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .collection(CollectionName.selectedChars)
+          .get();
+
+      if (documentSnapshot.docs.isNotEmpty) {
+        return await firestore
+            .collection(CollectionName.rooms)
+            .doc(roomId)
+            .collection(CollectionName.selectedChars)
+            .get()
+            .then((value) {
+          for (DocumentSnapshot doc in value.docs) {
+            doc.reference.delete();
+          }
+          return true;
+        });
+      }
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -505,6 +559,37 @@ class RoomRepository {
           .doc('1')
           .delete()
           .then((value) => true);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> showResults(
+      {required String roomId, required int length}) async {
+    return await firestore
+        .collection(CollectionName.rooms)
+        .doc(roomId)
+        .collection(CollectionName.selectedChars)
+        .get()
+        .then((value) {
+      print('${value.docs.length} DOCS LENGTH');
+      print('$length Alive LENGTH');
+      return value.docs.length == length;
+    });
+  }
+
+  static Future<bool> resetAllCharacters(
+      {required String roomId, required int charlength}) async {
+    try {
+      for (int i = 1; i <= charlength; i++) {
+        await firestore
+            .collection(CollectionName.rooms)
+            .doc(roomId)
+            .collection(CollectionName.characters)
+            .doc(i.toString())
+            .update({'status': 1});
+      }
+      return true;
     } catch (e) {
       return false;
     }
