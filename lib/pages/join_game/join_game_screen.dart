@@ -72,7 +72,7 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                             }
                           },
                           controller: _roomIdControllerList[index],
-                          hintText: 'room id',
+                          hintText: '',
                           keyboardType: TextInputType.number,
                         );
                       },

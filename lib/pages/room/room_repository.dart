@@ -353,17 +353,24 @@ class RoomRepository {
         }
         int count = 0;
         int aliveStatus = 0;
+        String? docId;
         for (int i = 0; i < charactersList.length; i++) {
           if (charactersList[i].isSleepModeOn == true &&
-              charactersList[i].status == CharacterStatus.alive) {
+              charactersList[i].status != CharacterStatus.dead) {
             count++;
           }
-          if (charactersList[i].status == CharacterStatus.alive) {
+          if (charactersList[i].status == CharacterStatus.muted) {
+            docId = charactersList[i].docId;
+          }
+          if (charactersList[i].status != CharacterStatus.dead) {
             aliveStatus++;
           }
         }
         if (count == aliveStatus) {
           updateIsSleepTime(roomId: roomId, isSleepTime: true);
+          if (docId != null) {
+            setAliveCharacterStatus(roomId: roomId, docId: docId);
+          }
         }
         return count == aliveStatus;
       });
@@ -516,7 +523,7 @@ class RoomRepository {
           await RoomRepository.setMutedCharacterStatus(
               roomId: roomId, docId: allSilencerList.first.docId ?? '');
         }
-        return 'DEAD : $mafiaSelected \n Healed: $doctorSelected \n Muted: $silencerSelected';
+        return 'Dead : $mafiaSelected \n Healed: $doctorSelected \n Muted: $silencerSelected';
       });
     } catch (e) {
       return '';

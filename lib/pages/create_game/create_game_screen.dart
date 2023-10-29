@@ -96,14 +96,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           GestureDetector(
-                            onTap: () => gameInit.remove30(),
-                            child: Text(
-                              '-30',
-                              style: TextStyle(
-                                  fontSize: 24, color: appColor.secondary),
-                            ),
-                          ),
-                          GestureDetector(
                             onTap: () => gameInit.remove20(),
                             child: Text(
                               '-20',
@@ -119,9 +111,25 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                   fontSize: 24, color: appColor.secondary),
                             ),
                           ),
+                          GestureDetector(
+                            onTap: () => gameInit.remove5(),
+                            child: Text(
+                              '-5',
+                              style: TextStyle(
+                                  fontSize: 24, color: appColor.secondary),
+                            ),
+                          ),
                           Text(
                             gameInit.timeCount.toString(),
                             style: const TextStyle(fontSize: 60),
+                          ),
+                          GestureDetector(
+                            onTap: () => gameInit.add5(),
+                            child: Text(
+                              '+5',
+                              style: TextStyle(
+                                  fontSize: 24, color: appColor.secondary),
+                            ),
                           ),
                           GestureDetector(
                             onTap: () => gameInit.add10(),
@@ -135,14 +143,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             onTap: () => gameInit.add20(),
                             child: Text(
                               '+20',
-                              style: TextStyle(
-                                  fontSize: 24, color: appColor.secondary),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => gameInit.add30(),
-                            child: Text(
-                              '+30',
                               style: TextStyle(
                                   fontSize: 24, color: appColor.secondary),
                             ),

@@ -199,6 +199,8 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
 
   bool isRolesShown = false;
 
+  bool isMyRoleShown = false;
+
   @override
   Widget build(BuildContext context) {
     final meInit = Provider.of<JoinGameProvider>(context);
@@ -243,9 +245,9 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                   .add(CharacterModel.fromFirestore(category));
                             }
                             int count = 0;
-                            for (var i = 0; i < charactersList.length; i++) {
+                            for (int i = 0; i < charactersList.length; i++) {
                               if (charactersList[i].name != null &&
-                                  charactersList[i].status == 1) {
+                                  charactersList[i].status != 2) {
                                 count++;
                                 if (charactersList[i].name == widget.name) {
                                   meInit.myCharacter = charactersList[i];
@@ -371,8 +373,8 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                       children: [
                                                         if (character.name !=
                                                                 null &&
-                                                            character.status ==
-                                                                1) ...[
+                                                            character.status !=
+                                                                2) ...[
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
@@ -471,8 +473,8 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                       children: [
                                                         if (character.name !=
                                                                 null &&
-                                                            character.status ==
-                                                                1) ...[
+                                                            character.status !=
+                                                                2) ...[
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
@@ -572,8 +574,8 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                       children: [
                                                         if (character.name !=
                                                                 null &&
-                                                            character.status ==
-                                                                1) ...[
+                                                            character.status !=
+                                                                2) ...[
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
@@ -679,9 +681,9 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                                 .length;
                                                         i++) {
                                                       if (charactersList[i]
-                                                              .status ==
+                                                              .status !=
                                                           CharacterStatus
-                                                              .alive) {
+                                                              .dead) {
                                                         aliveCharsList.add(
                                                             charactersList[i]);
                                                       }
@@ -780,8 +782,8 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                       children: [
                                                         if (character.name !=
                                                                 null &&
-                                                            character.status ==
-                                                                1) ...[
+                                                            character.status !=
+                                                                2) ...[
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
@@ -917,6 +919,28 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                   .secondary),
                                         ),
                                       ),
+                                      const SizedBox(height: 30),
+                                      IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              isMyRoleShown = !isMyRoleShown;
+                                            });
+                                          },
+                                          icon: isMyRoleShown
+                                              ? const Icon(Icons.hide_source)
+                                              : const Icon(
+                                                  Icons.remove_red_eye)),
+                                      const SizedBox(height: 20),
+                                      if (isMyRoleShown)
+                                        Text(
+                                            CharacterId.characterListEng[meInit
+                                                    .myCharacter!.characterId! -
+                                                1],
+                                            style: TextStyle(
+                                                fontSize: 24,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary)),
                                     ],
                                   ),
                                 ),
@@ -949,6 +973,8 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                 await RoomRepository
                                                     .isAllCharactersSleepOn(
                                                         roomId: widget.id);
+
+                                           
 
                                             // gameModel.isMafiaTime = true;
                                             // timerController.start();

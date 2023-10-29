@@ -63,7 +63,7 @@ class CreateGameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  int timeCount = 30;
+  int timeCount = 5;
 
   void add10() {
     timeCount += 10;
@@ -75,8 +75,8 @@ class CreateGameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void add30() {
-    timeCount += 30;
+  void add5() {
+    timeCount += 5;
     notifyListeners();
   }
 
@@ -94,9 +94,9 @@ class CreateGameProvider extends ChangeNotifier {
     }
   }
 
-  void remove30() {
-    if (timeCount - 30 > 0) {
-      timeCount -= 30;
+  void remove5() {
+    if (timeCount - 5 > 0) {
+      timeCount -= 5;
     }
     notifyListeners();
   }
