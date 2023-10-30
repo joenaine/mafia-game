@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -49,36 +50,41 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     timerController.dispose();
+    await player.dispose();
     // _timer.cancel();
 
     super.dispose();
   }
 
-  // late Timer _timer;
-  final int _start = 59;
-  bool isTimerFinished = false;
+  final player = AudioPlayer();
 
-  void startTimer(int value) {
-    // isTimerFinished = false;
-    // _start = value;
-    // const oneSec = Duration(seconds: 1);
-    // _timer = Timer.periodic(
-    //   oneSec,
-    //   (Timer timer) {
-    //     if (_start == 0) {
-    //       setState(() {
-    //         timer.cancel();
-    //         isTimerFinished = true;
-    //       });
-    //     } else {
-    //       setState(() {
-    //         _start--;
-    //       });
-    //     }
-    //   },
-    // );
+  Future<void> playMafiaTime() async {
+    await player.setSource(AssetSource('sounds/mafias.mp3'));
+    await player.resume();
+  }
+
+  Future<void> playDoctorTime() async {
+    await stopPlayer();
+    await player.setSource(AssetSource('sounds/doctors.mp3'));
+    await player.resume();
+  }
+
+  Future<void> playSilencerTime() async {
+    await stopPlayer();
+    await player.setSource(AssetSource('sounds/silencers.mp3'));
+    await player.resume();
+  }
+
+  Future<void> playDetectiveTime() async {
+    stopPlayer();
+    await player.setSource(AssetSource('sounds/detectives.mp3'));
+    await player.resume();
+  }
+
+  Future<void> stopPlayer() async {
+    await player.stop();
   }
 
   void stopTimer() {
@@ -126,36 +132,6 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
     }
     setState(() {});
   }
-
-  // Future<void> mafiaOption() async {
-  //   if (selectedMafiaCharactersList.isNotEmpty) {
-  //     for (int i = 0; i < selectedMafiaCharactersList.length; i++) {
-  //       await RoomRepository.setDeadCharacterStatus(
-  //           roomId: widget.id,
-  //           docId: selectedMafiaCharactersList[i].docId ?? '');
-  //     }
-  //   }
-  // }
-
-  // Future<void> doctorOption() async {
-  //   if (selectedDoctorCharactersList.isNotEmpty) {
-  //     for (int i = 0; i < selectedDoctorCharactersList.length; i++) {
-  //       await RoomRepository.setAliveCharacterStatus(
-  //           roomId: widget.id,
-  //           docId: selectedDoctorCharactersList[i].docId ?? '');
-  //     }
-  //   }
-  // }
-
-  // Future<void> silencerOption() async {
-  //   if (selectedSilencerCharactersList.isNotEmpty) {
-  //     for (int i = 0; i < selectedSilencerCharactersList.length; i++) {
-  //       await RoomRepository.setMutedCharacterStatus(
-  //           roomId: widget.id,
-  //           docId: selectedSilencerCharactersList[i].docId ?? '');
-  //     }
-  //   }
-  // }
 
   bool detectiveGuessedCharacter = false;
 
@@ -256,9 +232,15 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                             }
 
                             if (gameModelRaw.isSleepTime == true) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) async {
                                 gameModel.isMafiaTime = isMafia;
+
                                 timerController.start();
+                                if (gameModel.isMafiaTime!) {
+                                  await playMafiaTime();
+                                }
+
                                 // startTimer(gameModel.timerInSec ?? 10);
                               });
                             }
@@ -339,7 +321,9 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                     gameModel.isDoctorTime =
                                                         true;
                                                     setState(() {});
+
                                                     timerController.reset();
+                                                    await playDoctorTime();
                                                     timerController.start();
                                                   },
                                                   backgroundColor:
@@ -440,6 +424,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                         true;
                                                     setState(() {});
                                                     timerController.reset();
+                                                    await playSilencerTime();
                                                     timerController.start();
                                                   },
                                                   backgroundColor:
@@ -541,6 +526,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                         true;
                                                     setState(() {});
                                                     timerController.reset();
+                                                    await playDetectiveTime();
                                                     timerController.start();
                                                   },
                                                   backgroundColor:
@@ -641,6 +627,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                             widget.id);
                                                     gameModel.isDetectiveTime =
                                                         false;
+                                                    await stopPlayer();
 
                                                     final isSleep =
                                                         await RoomRepository
@@ -961,6 +948,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                             setState(() {
                                               isLoadingSleepButton = true;
                                             });
+
                                             clearSelectionList();
                                             await RoomRepository.setSleepModeOn(
                                                 roomId: widget.id,
@@ -973,8 +961,6 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                 await RoomRepository
                                                     .isAllCharactersSleepOn(
                                                         roomId: widget.id);
-
-                                           
 
                                             // gameModel.isMafiaTime = true;
                                             // timerController.start();

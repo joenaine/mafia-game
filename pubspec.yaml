@@ -9,6 +9,7 @@ environment:
   sdk: '>=2.18.5 <3.0.0'
 
 dependencies:
+  audioplayers: ^3.0.1
   cached_network_image: ^3.2.3
   circular_countdown_timer: ^0.2.3
   cloud_firestore: ^4.2.0
@@ -44,6 +45,7 @@ flutter:
     - assets/icons/
     - assets/avatars/
     - assets/images/
+    - assets/sounds/
 
   fonts:
     - family: Bebas
