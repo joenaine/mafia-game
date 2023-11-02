@@ -28,3 +28,13 @@ List<String> mergeDuplicatedNames(List<String> names) {
 
   return mergedNames;
 }
+
+int countWordOccurrences(List<String> wordList, String targetWord) {
+  int count = 0;
+  for (String word in wordList) {
+    if (word == targetWord) {
+      count++;
+    }
+  }
+  return count;
+}

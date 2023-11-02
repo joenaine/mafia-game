@@ -4,6 +4,7 @@ import 'package:mafiagame/constants/firebase_consts.dart';
 import 'package:mafiagame/pages/create_game/model/game_model.dart';
 import 'package:mafiagame/pages/room/model/character_model.dart';
 import 'package:mafiagame/pages/room/model/list_character_model.dart';
+import 'package:mafiagame/pages/room/model/vote_model.dart';
 import 'package:mafiagame/services/string_extensions.dart';
 
 class RoomRepository {
@@ -597,6 +598,105 @@ class RoomRepository {
             .update({'status': 1});
       }
       return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  ////VOTE/////
+  static Future<bool> submitVote(
+      {required String roomId,
+      required String docId,
+      required String selectedDocId}) async {
+    try {
+      // CharacterModel characterModel = await firestore
+      //     .collection(CollectionName.rooms)
+      //     .doc(roomId)
+      //     .collection(CollectionName.characters)
+      //     .doc(docId)
+      //     .get()
+      //     .then((value) => CharacterModel.fromFirestore(value));
+
+      return await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .collection(CollectionName.votes)
+          .doc(docId)
+          .set({'vote': selectedDocId}).then((value) => true);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<String> isAllCharactersVoted(
+      {required String roomId, required int aliveLength}) async {
+    try {
+      return await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .collection(CollectionName.votes)
+          .get()
+          .then((value) async {
+        if (aliveLength == value.docs.length) {
+          print('$aliveLength aliveLength S');
+          List<String> votesList = [];
+          for (QueryDocumentSnapshot<Map<String, dynamic>> category
+              in value.docs) {
+            votesList.add(category['vote']);
+          }
+          print('VoteList: $votesList');
+          List<String> mergedVotesList = mergeDuplicatedNames(votesList);
+          List<VoteModel> voteListCount = [];
+
+          for (int i = 0; i < mergedVotesList.length; i++) {
+            VoteModel voteModel = VoteModel(
+                count: countWordOccurrences(votesList, mergedVotesList[i]),
+                docId: mergedVotesList[i]);
+            voteListCount.add(voteModel);
+          }
+          voteListCount.sort(
+            (a, b) => b.count!.compareTo(a.count!),
+          );
+          print('${voteListCount.map((e) => e.toJson())} voteListCount');
+          if (voteListCount.first.count == voteListCount[1].count) {
+            return 'Draw results, try to choose one victim';
+          } else {
+            print('${voteListCount.first.docId} SELECTED DOC ID');
+            return await setDeadCharacterStatus(
+                    roomId: roomId, docId: voteListCount.first.docId!)
+                .then((value) => voteListCount.first.docId ?? 'error');
+          }
+        }
+
+        return 'error';
+      });
+    } catch (e) {
+      return 'error';
+    }
+  }
+
+  static Future<bool> deleteAllVotes(String roomId) async {
+    try {
+      QuerySnapshot documentSnapshot = await firestore
+          .collection(CollectionName.rooms)
+          .doc(roomId)
+          .collection(CollectionName.votes)
+          .get();
+
+      if (documentSnapshot.docs.isNotEmpty) {
+        return await firestore
+            .collection(CollectionName.rooms)
+            .doc(roomId)
+            .collection(CollectionName.votes)
+            .get()
+            .then((value) {
+          for (DocumentSnapshot doc in value.docs) {
+            doc.reference.delete();
+          }
+          return true;
+        });
+      }
+      return false;
     } catch (e) {
       return false;
     }

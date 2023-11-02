@@ -14,6 +14,9 @@ CharacterModel _$CharacterModelFromJson(Map<String, dynamic> json) =>
       docId: json['docId'] as String?,
       avatarIndex: json['avatarIndex'] as int?,
       isSleepModeOn: json['isSleepModeOn'] as bool?,
+      voteList: (json['voteList'] as List<dynamic>?)
+          ?.map((e) => CharacterModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$CharacterModelToJson(CharacterModel instance) =>
@@ -24,4 +27,5 @@ Map<String, dynamic> _$CharacterModelToJson(CharacterModel instance) =>
       'status': instance.status,
       'avatarIndex': instance.avatarIndex,
       'isSleepModeOn': instance.isSleepModeOn,
+      'voteList': instance.voteList,
     };

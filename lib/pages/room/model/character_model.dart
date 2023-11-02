@@ -11,6 +11,7 @@ class CharacterModel {
   final int? status;
   final int? avatarIndex;
   final bool? isSleepModeOn;
+  final List<CharacterModel>? voteList;
 
   CharacterModel(
       {this.characterId,
@@ -18,7 +19,8 @@ class CharacterModel {
       this.name,
       this.docId,
       this.avatarIndex,
-      this.isSleepModeOn});
+      this.isSleepModeOn,
+      this.voteList});
   factory CharacterModel.fromJson(Map<String, dynamic> json) =>
       _$CharacterModelFromJson(json);
 

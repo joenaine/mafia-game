@@ -19,6 +19,7 @@ import 'package:mafiagame/services/string_extensions.dart';
 import 'package:mafiagame/widgets/alert_dialog.dart';
 import 'package:mafiagame/widgets/app_button.dart';
 import 'package:mafiagame/widgets/app_overlay_widget.dart';
+import 'package:mafiagame/widgets/modal_bottom.dart';
 import 'package:mafiagame/widgets/nav_back.dart';
 import 'package:mafiagame/widgets/text_tap.dart';
 import 'package:provider/provider.dart';
@@ -176,6 +177,10 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
   bool isRolesShown = false;
 
   bool isMyRoleShown = false;
+
+  //VOTE
+  CharacterModel? voteCharacterModel;
+  ////
 
   @override
   Widget build(BuildContext context) {
@@ -931,76 +936,230 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                     ],
                                   ),
                                 ),
-                                bottomNavigationBar: gameModel.isSleepTime ==
-                                            false &&
-                                        charactersList.any((e) =>
-                                            e.name == meInit.myCharacter?.name &&
-                                                e.isSleepModeOn == false ||
-                                            e.name == meInit.myCharacter?.name &&
-                                                e.isSleepModeOn == null)
-                                    ? Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        height: 80,
-                                        child: AppButton(
-                                          text: 'Sleep',
-                                          onPressed: () async {
-                                            setState(() {
-                                              isLoadingSleepButton = true;
-                                            });
-
-                                            clearSelectionList();
-                                            await RoomRepository.setSleepModeOn(
-                                                roomId: widget.id,
-                                                docId:
-                                                    meInit.myCharacter!.docId!);
-                                            stopTimer();
-                                            isMafia = true;
-
-                                            final response =
-                                                await RoomRepository
-                                                    .isAllCharactersSleepOn(
-                                                        roomId: widget.id);
-
-                                            // gameModel.isMafiaTime = true;
-                                            // timerController.start();
-                                            setState(() {
-                                              isLoadingSleepButton = false;
-                                            });
-                                          },
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                        ))
-                                    : charactersList.any((e) =>
-                                            e.name == meInit.myCharacter?.name &&
-                                            e.isSleepModeOn == true)
+                                bottomNavigationBar:
+                                    gameModel.isSleepTime == false &&
+                                            charactersList.any((e) =>
+                                                e.name == meInit.myCharacter?.name &&
+                                                    e.isSleepModeOn == false ||
+                                                e.name == meInit.myCharacter?.name &&
+                                                    e.isSleepModeOn == null) &&
+                                            charactersList.any((element) =>
+                                                element == meInit.myCharacter &&
+                                                element.status != 2)
                                         ? Container(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 16),
                                             height: 80,
-                                            child: TextTap(
-                                              text: 'Awake',
-                                              onPressed: () async {
-                                                final response =
-                                                    await RoomRepository
-                                                        .setSleepModeOff(
-                                                            roomId: widget.id,
-                                                            docId: meInit
-                                                                .myCharacter!
-                                                                .docId!);
-                                                gameModel.isMafiaTime = false;
-                                                if (detectiveGuessedCharacter) {
-                                                  screenPop(context);
-                                                }
-                                                detectiveGuessedCharacter =
-                                                    false;
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: AppButton(
+                                                    text: 'Vote',
+                                                    color: AppColors.grey300,
+                                                    onPressed: () {
+                                                      ModalBottomSheetCustom
+                                                          .moreModalBottomSheet(
+                                                              context,
+                                                              MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .height *
+                                                                  .5,
+                                                              0,
+                                                              [
+                                                            StatefulBuilder(
+                                                                builder: (context,
+                                                                    setState) {
+                                                              return StreamBuilder(
+                                                                  stream: firestore
+                                                                      .collection(
+                                                                          CollectionName
+                                                                              .rooms)
+                                                                      .doc(widget
+                                                                          .id)
+                                                                      .collection(
+                                                                          CollectionName
+                                                                              .votes)
+                                                                      .snapshots(),
+                                                                  builder: (context,
+                                                                      snapshot) {
+                                                                    List<String>
+                                                                        voteIds =
+                                                                        [];
+                                                                    if (snapshot
+                                                                        .hasData) {
+                                                                      for (QueryDocumentSnapshot<
+                                                                          Map<String,
+                                                                              dynamic>> category in snapshot
+                                                                          .data!
+                                                                          .docs) {
+                                                                        voteIds.add(
+                                                                            category['vote']);
+                                                                      }
+                                                                    }
+                                                                    return Column(
+                                                                      children: [
+                                                                        Center(
+                                                                          child:
+                                                                              Wrap(
+                                                                            alignment:
+                                                                                WrapAlignment.center,
+                                                                            children:
+                                                                                charactersList.map((character) {
+                                                                              int countVotes = 0;
+                                                                              for (int i = 0; i < voteIds.length; i++) {
+                                                                                if (voteIds[i] == character.docId) {
+                                                                                  countVotes++;
+                                                                                }
+                                                                              }
 
-                                                stopTimer();
-                                                setState(() {});
-                                              },
+                                                                              return Column(
+                                                                                children: [
+                                                                                  if (character.name != null && character.status != 2) ...[
+                                                                                    Padding(
+                                                                                      padding: const EdgeInsets.all(8.0),
+                                                                                      child: Column(
+                                                                                        children: [
+                                                                                          GestureDetector(
+                                                                                            onTap: () {
+                                                                                              if (character != meInit.myCharacter) {
+                                                                                                setState(() {
+                                                                                                  voteCharacterModel = character;
+                                                                                                });
+                                                                                              }
+                                                                                            },
+                                                                                            child: Stack(
+                                                                                              children: [
+                                                                                                Container(
+                                                                                                  padding: const EdgeInsets.all(3),
+                                                                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(40), border: voteCharacterModel == character ? Border.all(strokeAlign: StrokeAlign.outside, width: 2, color: AppColors.error) : const Border()),
+                                                                                                  child: SvgPicture.asset(
+                                                                                                    '${AppAssets.avatar.icon}${character.avatarIndex!}.svg',
+                                                                                                    height: 50,
+                                                                                                  ),
+                                                                                                ),
+                                                                                                CircleAvatar(
+                                                                                                  radius: 10,
+                                                                                                  child: Text(countVotes.toString()),
+                                                                                                )
+                                                                                              ],
+                                                                                            ),
+                                                                                          ),
+                                                                                          const SizedBox(height: 8),
+                                                                                          Text(ShortText.fromText(character.name ?? ''))
+                                                                                        ],
+                                                                                      ),
+                                                                                    )
+                                                                                  ]
+                                                                                ],
+                                                                              );
+                                                                            }).toList(),
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(
+                                                                            height:
+                                                                                30),
+                                                                        AppButton(
+                                                                          text:
+                                                                              'vote',
+                                                                          color: Theme.of(context)
+                                                                              .colorScheme
+                                                                              .primary,
+                                                                          onPressed:
+                                                                              () async {
+                                                                            if (voteCharacterModel!.docId !=
+                                                                                null) {
+                                                                              await RoomRepository.submitVote(roomId: widget.id, selectedDocId: voteCharacterModel!.docId!, docId: meInit.myCharacter!.docId!);
+                                                                              String res = await RoomRepository.isAllCharactersVoted(roomId: widget.id, aliveLength: count);
+                                                                              print('$res RES');
+                                                                              if (res != 'error') {
+                                                                                await RoomRepository.deleteAllVotes(widget.id);
+                                                                              }
+                                                                            }
+                                                                            screenPop(context);
+                                                                          },
+                                                                        ),
+                                                                      ],
+                                                                    );
+                                                                  });
+                                                            })
+                                                          ]);
+                                                    },
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 20),
+                                                Expanded(
+                                                  child: AppButton(
+                                                    text: 'Sleep',
+                                                    onPressed: () async {
+                                                      setState(() {
+                                                        isLoadingSleepButton =
+                                                            true;
+                                                      });
+
+                                                      clearSelectionList();
+                                                      await RoomRepository
+                                                          .setSleepModeOn(
+                                                              roomId: widget.id,
+                                                              docId: meInit
+                                                                  .myCharacter!
+                                                                  .docId!);
+                                                      stopTimer();
+                                                      isMafia = true;
+
+                                                      final response =
+                                                          await RoomRepository
+                                                              .isAllCharactersSleepOn(
+                                                                  roomId: widget
+                                                                      .id);
+
+                                                      // gameModel.isMafiaTime = true;
+                                                      // timerController.start();
+                                                      setState(() {
+                                                        isLoadingSleepButton =
+                                                            false;
+                                                      });
+                                                    },
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
+                                                ),
+                                              ],
                                             ))
-                                        : const SizedBox());
+                                        : charactersList.any((e) =>
+                                                e.name == meInit.myCharacter?.name &&
+                                                e.isSleepModeOn == true)
+                                            ? Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                height: 80,
+                                                child: TextTap(
+                                                  text: 'Awake',
+                                                  onPressed: () async {
+                                                    final response =
+                                                        await RoomRepository
+                                                            .setSleepModeOff(
+                                                                roomId:
+                                                                    widget.id,
+                                                                docId: meInit
+                                                                    .myCharacter!
+                                                                    .docId!);
+                                                    gameModel.isMafiaTime =
+                                                        false;
+                                                    if (detectiveGuessedCharacter) {
+                                                      screenPop(context);
+                                                    }
+                                                    detectiveGuessedCharacter =
+                                                        false;
+
+                                                    stopTimer();
+                                                    setState(() {});
+                                                  },
+                                                ))
+                                            : const SizedBox());
                           } else {
                             return const SizedBox();
                           }

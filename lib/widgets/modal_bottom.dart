@@ -16,7 +16,9 @@ class ModalBottomSheetCustom {
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
-            color: AppColors.white,
+            decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.background,
+                border: const Border(top: BorderSide(color: AppColors.white))),
             height: height,
             padding: const EdgeInsets.all(16),
             child: Stack(

@@ -29,6 +29,13 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
   final List<FocusNode> _focusNodeList =
       List.generate(5, (index) => FocusNode());
 
+  @override
+  void dispose() {
+    _roomIdControllerList.map((e) => e.dispose());
+    _nameController.dispose();
+    super.dispose();
+  }
+
   bool isLoading = false;
   @override
   Widget build(BuildContext context) {
