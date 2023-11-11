@@ -178,8 +178,13 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
 
   bool isMyRoleShown = false;
 
+  void updateState() {
+    setState(() {});
+  }
+
   //VOTE
   CharacterModel? voteCharacterModel;
+  String res = '';
   ////
 
   @override
@@ -234,6 +239,34 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                   meInit.myCharacter = charactersList[i];
                                 }
                               }
+                            }
+                            if (res != '' && res != 'error') {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (res !=
+                                    'Draw results, try to choose one victim') {
+                                  AlertDialogCustom.customAlert(
+                                    context,
+                                    title: 'Vote',
+                                    content:
+                                        '${charactersList.where((element) => element.docId == res).first.name} is died by vote',
+                                    generalButton: 'ok',
+                                    onTapGeneral: () {
+                                      screenPop(context);
+                                    },
+                                  );
+                                } else {
+                                  AlertDialogCustom.customAlert(
+                                    context,
+                                    title: 'Vote',
+                                    content: res,
+                                    generalButton: 'ok',
+                                    onTapGeneral: () {
+                                      screenPop(context);
+                                    },
+                                  );
+                                }
+                                res = '';
+                              });
                             }
 
                             if (gameModelRaw.isSleepTime == true) {
@@ -1072,14 +1105,21 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                                                               () async {
                                                                             if (voteCharacterModel!.docId !=
                                                                                 null) {
+                                                                              screenPop(context);
+
                                                                               await RoomRepository.submitVote(roomId: widget.id, selectedDocId: voteCharacterModel!.docId!, docId: meInit.myCharacter!.docId!);
-                                                                              String res = await RoomRepository.isAllCharactersVoted(roomId: widget.id, aliveLength: count);
+                                                                              res = await RoomRepository.isAllCharactersVoted(roomId: widget.id, aliveLength: count);
                                                                               print('$res RES');
-                                                                              if (res != 'error') {
+
+                                                                              if (res != 'error' && res != 'Draw results, try to choose one victim') {
                                                                                 await RoomRepository.deleteAllVotes(widget.id);
                                                                               }
                                                                             }
-                                                                            screenPop(context);
+
+                                                                            if (res != '' &&
+                                                                                res != 'error') {
+                                                                              updateState();
+                                                                            }
                                                                           },
                                                                         ),
                                                                       ],
@@ -1131,8 +1171,7 @@ class _RoomMafiaScreenState extends State<RoomMafiaScreen>
                                               ],
                                             ))
                                         : charactersList.any((e) =>
-                                                e.name == meInit.myCharacter?.name &&
-                                                e.isSleepModeOn == true)
+                                                e.name == meInit.myCharacter?.name && e.isSleepModeOn == true)
                                             ? Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                                 height: 80,

@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:1013856136438:android:6851db0fef8e6b7390d0d7",
+        "android_client_info": {
+          "package_name": "com.device.mafia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1013856136438-o0bt42tq9k51ea2ki107nrqdnamci6q4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkx0byBnaEU_A4JJP8m-OBfnAOWypob4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1013856136438-o0bt42tq9k51ea2ki107nrqdnamci6q4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1013856136438-b7vh0s4p421n8mqtmsatqq17saetfrr9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.game.mafia"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:1013856136438:android:4b0d52e245137c2590d0d7",
         "android_client_info": {
           "package_name": "com.game.mafia"
@@ -29,6 +65,13 @@
             {
               "client_id": "1013856136438-o0bt42tq9k51ea2ki107nrqdnamci6q4.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "1013856136438-b7vh0s4p421n8mqtmsatqq17saetfrr9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.game.mafia"
+              }
             }
           ]
         }
