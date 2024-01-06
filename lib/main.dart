@@ -8,7 +8,17 @@ import 'package:mafiagame/widgets/init_widget.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  // await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+        apiKey: "AIzaSyCqfQvUZrYd4Nx_ZLPEh-ScULo8Fm4NarA",
+        authDomain: "mafia-game1.firebaseapp.com",
+        projectId: "mafia-game1",
+        storageBucket: "mafia-game1.appspot.com",
+        messagingSenderId: "1013856136438",
+        appId: "1:1013856136438:web:eab1e5c8bc79c6e490d0d7",
+        measurementId: "G-X334N0FTX8"),
+  );
   runApp(const MyApp());
 }
 

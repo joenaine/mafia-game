@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mafiagame/constants/app_colors_const.dart';
 
@@ -16,11 +13,9 @@ class AppLoaderWidget extends StatelessWidget {
         child: SizedBox(
             height: 20,
             width: 20,
-            child: Platform.isAndroid
-                ? CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.white,
-                    backgroundColor: Theme.of(context).colorScheme.primary)
-                : const CupertinoActivityIndicator()));
+            child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary)));
   }
 }
